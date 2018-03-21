@@ -89,7 +89,7 @@ def tdist_unet(timesteps = 1):
     # block 8
     relu_42 = TimeDistributed(Activation("relu", name="ReLU_42"), name="TD_ReLU_42")(merge_41)
     down_43 = TimeDistributed(AveragePooling3D(pool_size=(54,29,22), data_format="channels_first", name="down_43"), name="TD_down_43")(relu_42)
-    conv_44 = TimeDistributed(Conv3D(filters=1, kernel_size=(1,1,1), data_format="channels_first", name="conv_44"), name="TD_conv_44")(down_43)
+    conv_44 = TimeDistributed(Conv3D(activation='softmax', filters=1, kernel_size=(1,1,1), data_format="channels_first", name="conv_44"), name="TD_conv_44")(down_43)
     
     model = Model(inputs=input_1, outputs=conv_44)
     
