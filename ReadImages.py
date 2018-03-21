@@ -28,7 +28,7 @@ def read_image_dir(imdir):
             sitk_image = sitk.ReadImage(path, sitk.sitkFloat32)
             image = sitk.GetArrayFromImage( sitk_image )
 
-            ## Keep track of supremum shape of image seen so far
+            # Keep track of supremum shape of image seen so far
             for i in range(3):
                 if image.shape[i] > target_shape[i]:
                     target_shape[i] = image.shape[i]
@@ -42,16 +42,16 @@ def read_image_dir(imdir):
             image_sets[ keys[vol] ].append( image )
             used_paths[ keys[vol] ].append( path )
 
-    ## If needed set target shape to a specific size
-    ## target_shape = (128,128,128)
+    # If needed set target shape to a specific size
+    # target_shape = (128,128,128)
 
-    ## Crop and pad all images to supremum shape and add a fourth dimension with size 1 to satisfy keras
+    # Crop and pad all images to supremum shape and add a fourth dimension with size 1 to satisfy keras
     for i in range(len(image_sets)):
         for j in range(len(image_sets[i])):
             image = image_sets[i][j]
             shape = image.shape
 
-            ## Crop if image is too big
+            # Crop if image is too big
             if shape[0] > target_shape[0]:
                 crop = shape[0] - target_shape[0]
                 image = image[crop//2:target_shape[0],:]            
@@ -62,7 +62,7 @@ def read_image_dir(imdir):
                 crop = shape[2] - target_shape[2]
                 image = image[:,crop//2:target_shape[2]]
 
-            ## Zero pad if image is too small
+            # Zero pad if image is too small
             pad0 = target_shape[0] - image.shape[0]
             pad1 = target_shape[1] - image.shape[1]
             pad2 = target_shape[2] - image.shape[2]
@@ -70,10 +70,10 @@ def read_image_dir(imdir):
             image = ski.util.pad(image, padding, mode='constant')
             image_sets[i][j] = image.reshape(target_shape)
 
-        ## Stack the image set into an array
+        # Stack the image set into an array
         image_sets[i] = np.stack(image_sets[i])
 
-    ## Stack all image sets into an array
+    # Stack all image sets into an array
     image_sets = np.stack( image_sets )
 
     return image_sets, np.array(used_paths, dtype=np.string_)
