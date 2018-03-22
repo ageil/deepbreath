@@ -101,5 +101,7 @@ ENV/
 .mypy_cache/
 
 
-# Data folder
-/Data/
+# Folders
+/data/
+/graph/
+/model/
