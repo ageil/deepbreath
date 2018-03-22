@@ -15,10 +15,11 @@ from unet import tdist_unet
 
 
 # Set hyperparameters
-max_epochs = 2
+max_epochs = 50
 batch_size = 8
 timesteps = 1
 learn_rate = 1e-4
+name = "single"
 
 
 # Load data partitions
@@ -29,8 +30,8 @@ with open("./data/partition.pkl", 'rb') as f:
 target = pd.read_csv("./data/ERU_Scores_Ids_5-Scans_Validity-0_VisuallyScored.csv")
 labels = target.set_index("StId").to_dict()["ERU.M2"]
 
-# Rescale labels
-label_converter = {0: 0.0, 1: 0.0, 2: 0.03, 3: 0.155, 4: 0.38, 5: 0.63, 6: 0.88} # combine 0+1 as 0 = no emph in scan, 1 = no emph in region
+# Rescale labels; combine 0+1 as 0 = no emph in scan, 1 = no emph in region
+label_converter = {0: 0.0, 1: 0.0, 2: 0.03, 3: 0.155, 4: 0.38, 5: 0.63, 6: 0.88}
 labels = {key: label_converter[val] for key, val in labels.items()}
 
 
@@ -42,9 +43,9 @@ class_weights = class_weight.compute_class_weight(class_weight='balanced',
                                                   y=train_labels)
 
 # Create data generators
-trainGen = DataGenerator("single_train", batch_size=batch_size, timesteps=timesteps,
+trainGen = DataGenerator(name+"_train", batch_size=batch_size, timesteps=timesteps,
                          channels=1, dim_x=142, dim_y=322, dim_z=262, shuffle=True)
-validGen = DataGenerator("single_valid", batch_size=batch_size, timesteps=timesteps,
+validGen = DataGenerator(name+"_valid", batch_size=batch_size, timesteps=timesteps,
                          channels=1, dim_x=142, dim_y=322, dim_z=262, shuffle=False)
 
 trainGen = trainGen.generate(labels, partition["train"])
@@ -61,7 +62,7 @@ model.compile(optimizer=Adam(lr = learn_rate),
 # Set callbacks
 callbacks_list = []
 
-directory = "./models/single/"
+directory = "./models/"+name+"/"
 if not os.path.exists(directory):
     os.makedirs(directory)
 modeldir = directory + "epoch_{epoch:02d}-valacc_{val_acc:.2f}.hdf5"
@@ -87,5 +88,5 @@ hist = model.fit_generator(generator = trainGen,
 # Dump history to disk
 if not os.path.exists("../output/"):
     os.makedirs("../output/")
-with open("../output/history.pkl", 'wb') as f:
+with open("../output/"+name+"_history.pkl", 'wb') as f:
     pickle.dump(hist.history, f, pickle.HIGHEST_PROTOCOL)
