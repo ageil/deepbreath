@@ -38,7 +38,7 @@ class DataGenerator(object):
         
         for i, ID in enumerate(list_IDs_temp):
             # store volume
-            path = '/Users/anders1991/deepbreath/data/'+self.folder+"/vol_"+str(ID) +".npy"
+            path = './data/'+self.folder+"/vol_"+str(ID) +".npy"
             X[i, :, :, :, :, :] = np.load(path)
             y[i, 0, 0, 0, 0, 0] = labels[ID]
         
