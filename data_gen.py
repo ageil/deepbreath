@@ -35,9 +35,6 @@ class DataGenerator(object):
         X = np.empty((self.batch_size, self.channels, self.timesteps, 
                       self.dim_x, self.dim_y, self.dim_z))
         y = np.empty((self.batch_size, 1, 1, 1, 1, 1), dtype=int)
-
-        label_converter = {0: 0.0, 1: 0.0, 2: 0.03, 3: 0.155, 4: 0.38, 5: 0.63, 6: 0.88}
-        labels = {key: label_converter[val] for key, val in labels.items()}
         
         for i, ID in enumerate(list_IDs_temp):
             # store volume
