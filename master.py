@@ -2,6 +2,7 @@
 import numpy as np
 import pandas as pd
 import os
+import sys
 import pickle
 from sklearn.utils import class_weight
 
@@ -15,10 +16,12 @@ from unet import tdist_unet
 
 
 # Set hyperparameters
-max_epochs = 50
-batch_size = 8
+# timesteps = int(sys.argv[1])
+# batch_size = int(sys.argv[2])
 timesteps = 1
+batch_size = 8
 learn_rate = 1e-4
+max_epochs = 50
 name = "single"
 
 
