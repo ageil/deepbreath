@@ -105,3 +105,4 @@ ENV/
 /data/
 /graph/
 /model/
+/minimal_ex/
