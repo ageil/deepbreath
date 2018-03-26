@@ -14,17 +14,18 @@ from keras.callbacks import ModelCheckpoint, TensorBoard
 # Custom
 from data_gen import DataGenerator
 from unet import tdist_unet
+from TBCallbacks import TrainValTensorBoard
 
 
 # Set hyperparameters
 # timesteps = int(sys.argv[1])
 # batch_size = int(sys.argv[2])
 timesteps = 1
-batch_size = 8
+batch_size = 4
 learn_rate = 1e-4
 max_epochs = 50
 name = "single"
-downsample = 4
+downsample = 2
 
 
 # Load data partitions
@@ -76,9 +77,11 @@ checkpoint = ModelCheckpoint(modeldir, monitor='val_acc', save_weights_only=Fals
 callbacks_list.append(checkpoint) # saves model weights
 # Load model weights using: model.load_weights(modeldir)
 
-tensorboard = TensorBoard(log_dir='./graph', histogram_freq=1, write_graph=True, write_images=True)
-callbacks_list.append(tensorboard) # add tensorboard logging
+tensorboard = TensorBoard(log_dir='./logs', histogram_freq=1, write_graph=True, write_images=True)
+trainvalTB = TrainValTensorBoard(tensorboard) # custom TB writer object
+callbacks_list.append(trainvalTB) # add tensorboard logging
 # Access tensorboard using: tensorboard --logdir path_to_current_dir/graph
+
 
 # Train model
 hist = model.fit_generator(generator = trainGen,
