@@ -78,7 +78,7 @@ callbacks_list.append(checkpoint) # saves model weights
 # Load model weights using: model.load_weights(modeldir)
 
 # tensorboard = TensorBoard(log_dir='./logs', histogram_freq=1, write_graph=True, write_images=True)
-tensorboard= TrainValTensorBoard(log_dir="./logs", histogram_freq=1, write_graph=True, write_images=True) # custom TB writer object
+tensorboard= TrainValTensorBoard(log_dir="./logs", histogram_freq=0, write_graph=True, write_images=True) # custom TB writer object
 callbacks_list.append(tensorboard) # add tensorboard logging
 # Access tensorboard using: tensorboard --logdir path_to_current_dir/graph
 
