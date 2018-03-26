@@ -4,16 +4,21 @@ from keras.layers.core import Dense, Dropout, Flatten, Reshape
 from keras.layers.convolutional import Conv3D, Cropping3D
 from keras.layers.recurrent import LSTM
 from keras.layers.wrappers import TimeDistributed, Bidirectional
+from keras.layers.pooling import MaxPooling3D
 
 
-def tdist_unet(timesteps=1):
+def tdist_unet(timesteps=1, downsample=1):
     assert timesteps > 0, "timesteps must be larger than 0"
     assert timesteps <= 5, "timesteps cannot exceed 5"
+    assert downsample > 0, "input downsampling factor must be 1 (none) or larger"
 
     # block 1
     input_1 = Input(shape=(timesteps, 1, 142, 322, 262), name="input_1")  # timesteps x channels x imgsize
+    mpool = TimeDistributed(
+        MaxPooling3D(pool_size=(downsample, downsample, downsample), data_format="channels_first", name="mpool3D"),
+        name="TD_mpool3D")(input_1)
     conv_1 = TimeDistributed(Conv3D(filters=6, kernel_size=(1, 5, 5), data_format="channels_first", name="conv_1"),
-                             name="TD_conv_1")(input_1)
+                             name="TD_conv_1")(mpool)
     relu_2 = TimeDistributed(Activation('relu', name="ReLU_2"), name="TD_ReLU_2")(conv_1)
     down_3 = TimeDistributed(
         Conv3D(filters=8, kernel_size=(1, 1, 1), strides=(2, 2, 2), data_format="channels_first", name="down_3"),
@@ -106,8 +111,9 @@ def tdist_unet(timesteps=1):
 
     # block 8
     relu_42 = TimeDistributed(Activation("relu", name="ReLU_42"), name="TD_ReLU_42")(merge_41)
-    down_43 = TimeDistributed(AveragePooling3D(pool_size=(54, 29, 22), data_format="channels_first", name="down_43"),
-                              name="TD_down_43")(relu_42)
+    down_43 = TimeDistributed(
+        AveragePooling3D(pool_size=relu_42._keras_shape[-3:], data_format="channels_first", name="down_43"),
+        name="TD_down_43")(relu_42)
 
     if timesteps > 1:
         flatten_44 = TimeDistributed(Flatten(name="flatten_44"), name="TD_flatten_44")(down_43)
