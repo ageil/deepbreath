@@ -23,6 +23,7 @@ batch_size = 8
 learn_rate = 1e-4
 max_epochs = 50
 name = "single"
+downsample = 2
 
 
 # Load data partitions
@@ -56,7 +57,7 @@ validGen = validGen.generate(labels, partition["valid"])
 
 
 # Create model
-model = tdist_unet(timesteps=timesteps)
+model = tdist_unet(timesteps=timesteps, downsample=downsample)
 model.compile(optimizer=Adam(lr = learn_rate),
               loss='mean_absolute_error',
               metrics=['accuracy', 'mae', 'mse'])
