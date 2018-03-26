@@ -4,6 +4,7 @@ import pandas as pd
 import os
 import sys
 import pickle
+import h5py
 from sklearn.utils import class_weight
 
 # Keras
@@ -23,7 +24,7 @@ batch_size = 8
 learn_rate = 1e-4
 max_epochs = 50
 name = "single"
-downsample = 2
+downsample = 4
 
 
 # Load data partitions
