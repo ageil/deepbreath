@@ -21,11 +21,11 @@ from TBCallbacks import TrainValTensorBoard
 # timesteps = int(sys.argv[1])
 # batch_size = int(sys.argv[2])
 timesteps = 1
-batch_size = 4
+batch_size = 8
 learn_rate = 1e-4
 max_epochs = 50
 name = "single"
-downsample = 2
+downsample = 1
 
 
 # Load data partitions
