@@ -23,7 +23,7 @@ class DataGenerator(object):
         
         return indices
     
-    def __onehot(self, y, labels):
+    def __onehot(self, labels, y):
         'Encode labels to onehot format'
         n_classes = len(np.unique(list(labels.values())))
         onehot = np.array([[1 if y[i] == j else 0 for j in range(n_classes)]
@@ -34,7 +34,7 @@ class DataGenerator(object):
         'Generate sample of size batch_size'
         X = np.empty((self.batch_size, self.channels, self.timesteps, 
                       self.dim_x, self.dim_y, self.dim_z))
-        y = np.empty((self.batch_size, 1, 1, 1, 1, 1), dtype=int)
+        y = np.empty((self.batch_size, 1, 1, 1, 1, 1), dtype=float)
         
         for i, ID in enumerate(list_IDs_temp):
             # store volume
