@@ -8,7 +8,7 @@ import h5py
 from sklearn.utils import class_weight
 
 # Keras
-from keras.optimizers import Adam
+from keras.optimizers import Adam, Nadam
 from keras.callbacks import ModelCheckpoint, TensorBoard
 
 # Custom
@@ -21,8 +21,8 @@ from TBCallbacks import TrainValTensorBoard
 # timesteps = int(sys.argv[1])
 # batch_size = int(sys.argv[2])
 timesteps = 1
-batch_size = 8
-learn_rate = 1e-4
+batch_size = 5
+learn_rate = 1e-5
 max_epochs = 50
 name = "single"
 downsample = 1
@@ -52,7 +52,7 @@ class_weights = class_weight.compute_class_weight(class_weight='balanced',
 trainGen = DataGenerator(name+"_train", batch_size=batch_size, timesteps=timesteps,
                          channels=1, dim_x=142, dim_y=322, dim_z=262, shuffle=True)
 validGen = DataGenerator(name+"_valid", batch_size=batch_size, timesteps=timesteps,
-                         channels=1, dim_x=142, dim_y=322, dim_z=262, shuffle=False)
+                         channels=1, dim_x=142, dim_y=322, dim_z=262, shuffle=True)
 
 trainGen = trainGen.generate(labels, partition["train"])
 validGen = validGen.generate(labels, partition["valid"])
