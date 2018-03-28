@@ -32,7 +32,7 @@ class DataGenerator(object):
     
     def __gen_batch(self, labels, list_IDs_temp):
         'Generate sample of size batch_size'
-        X = np.empty((self.batch_size, self.channels, self.timesteps, 
+        X = np.empty((self.batch_size, self.timesteps, self.channels, 
                       self.dim_x, self.dim_y, self.dim_z))
         y = np.empty((self.batch_size, 1, 1, 1, 1, 1), dtype=float)
         
