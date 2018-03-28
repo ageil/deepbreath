@@ -21,10 +21,10 @@ from TBCallbacks import TrainValTensorBoard
 # timesteps = int(sys.argv[1])
 # batch_size = int(sys.argv[2])
 timesteps = 5
-batch_size = 1
+batch_size = 4
 learn_rate = 1e-4
 max_epochs = 50
-name = "single"
+name = "time"
 downsample = 2
 
 
