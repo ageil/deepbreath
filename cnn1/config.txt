@@ -1,0 +1,6 @@
+timesteps = 1
+batch_size = 5
+learn_rate = 1e-4
+max_epochs = 50
+name = "cnn1"
+downsample = 2
