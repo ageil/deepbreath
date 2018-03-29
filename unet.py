@@ -122,9 +122,9 @@ def tdist_unet(timesteps=1, downsample=1, droprate=0.5):
     if timesteps > 1:
         flatten_44 = TimeDistributed(Flatten(name="flatten_44"), name="TD_flatten_44")(down_43)
         lstm_45 = Bidirectional(LSTM(32, return_sequences=True, name="lstm_45"), name="bidir_lstm_45")(flatten_44)
-        drop_46 = Dropout(rate=droprate, name="drop_46")(lstm_45)
+        drop_46 = Dropout(rate=droprate, seed=2, name="drop_46")(lstm_45)
         lstm_47 = Bidirectional(LSTM(64, return_sequences=True, name="lstm_46"), name="bidir_lstm_46")(drop_46)
-        drop_48 = Dropout(rate=droprate, name="drop_48")(lstm_47)
+        drop_48 = Dropout(rate=droprate, seed=2, name="drop_48")(lstm_47)
         lstm_49 = LSTM(1, activation="softmax", return_sequences=False, name="lstm_47")(drop_48)
         output_50 = Reshape(target_shape=(1, 1, 1, 1, 1), name="output_48")(lstm_49)
         model = Model(inputs=input_1, outputs=output_50)
