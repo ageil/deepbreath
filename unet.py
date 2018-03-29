@@ -7,10 +7,14 @@ from keras.layers.wrappers import TimeDistributed, Bidirectional
 from keras.layers.pooling import MaxPooling3D
 
 
-def tdist_unet(timesteps=1, downsample=1):
+def tdist_unet(timesteps=1, downsample=1, droprate=0.5):
     assert timesteps > 0, "timesteps must be larger than 0"
     assert timesteps <= 5, "timesteps cannot exceed 5"
     assert downsample > 0, "input downsampling factor must be 1 (none) or larger"
+    if timesteps > 0:
+        assert droprate is not None, "dropout rate needs to be set for RNN"
+        assert droprate >= 0, "dropout rate cannot be negative"
+        assert droprate <= 1, "dropout rate cannot exceed 1"
 
     # block 1
     input_1 = Input(shape=(timesteps, 1, 142, 322, 262), name="input_1")  # timesteps x channels x imgsize
@@ -118,10 +122,12 @@ def tdist_unet(timesteps=1, downsample=1):
     if timesteps > 1:
         flatten_44 = TimeDistributed(Flatten(name="flatten_44"), name="TD_flatten_44")(down_43)
         lstm_45 = Bidirectional(LSTM(32, return_sequences=True, name="lstm_45"), name="bidir_lstm_45")(flatten_44)
-        lstm_46 = Bidirectional(LSTM(64, return_sequences=True, name="lstm_46"), name="bidir_lstm_46")(lstm_45)
-        lstm_47 = LSTM(1, activation="softmax", return_sequences=False, name="lstm_47")(lstm_46)
-        output_48 = Reshape(target_shape=(1, 1, 1, 1, 1), name="output_48")(lstm_47)
-        model = Model(inputs=input_1, outputs=output_48)
+        drop_46 = Dropout(rate=droprate, name="drop_46")(lstm_45)
+        lstm_47 = Bidirectional(LSTM(64, return_sequences=True, name="lstm_46"), name="bidir_lstm_46")(drop_46)
+        drop_48 = Dropout(rate=droprate, name="drop_48")(lstm_47)
+        lstm_49 = LSTM(1, activation="softmax", return_sequences=False, name="lstm_47")(drop_48)
+        output_50 = Reshape(target_shape=(1, 1, 1, 1, 1), name="output_48")(lstm_49)
+        model = Model(inputs=input_1, outputs=output_50)
     else:
         output_44 = TimeDistributed(
             Conv3D(filters=1, kernel_size=(1, 1, 1), data_format="channels_first", name="conv_44"), name="TD_conv_44")(

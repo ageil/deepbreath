@@ -21,11 +21,12 @@ from TBCallbacks import TrainValTensorBoard
 # timesteps = int(sys.argv[1])
 # batch_size = int(sys.argv[2])
 timesteps = 5
-batch_size = 4
+batch_size = 1
 learn_rate = 1e-4
 max_epochs = 50
 name = "time"
 downsample = 2
+droprate = 0.5
 
 
 # Load data partitions
@@ -59,7 +60,7 @@ validGen = validGen.generate(labels, partition["valid"])
 
 
 # Create model
-model = tdist_unet(timesteps=timesteps, downsample=downsample)
+model = tdist_unet(timesteps=timesteps, downsample=downsample, droprate = droprate)
 model.compile(optimizer=Adam(lr = learn_rate),
               loss='mean_absolute_error',
               metrics=['accuracy', 'mae', 'mse'])
