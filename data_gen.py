@@ -29,7 +29,7 @@ class DataGenerator(object):
         'Encode labels to onehot format'
         n_classes = len(np.unique(list(labels.values())))
         onehot = np.array([[1 if y[i] == j else 0 for j in range(n_classes)]
-                           for i in range(y.shape[0])])
+                           for i in range(y.shape[0])], dtype=float)
         return onehot
     
     def __gen_batch(self, labels, list_IDs_temp):

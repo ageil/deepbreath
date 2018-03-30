@@ -18,16 +18,23 @@ from TBCallbacks import TrainValTensorBoard
 
 
 # Set hyperparameters
-# timesteps = int(sys.argv[1])
-# batch_size = int(sys.argv[2])
-name = "rnn1_class"
-classification = True
-timesteps = 1
-batch_size = 3
-learn_rate = 1e-4
-max_epochs = 50
-downsample = 2
+name = sys.argv[1]
+classification = bool(sys.argv[2])
+timesteps = int(sys.argv[3])
+batch_size = int(sys.argv[4])
+learn_rate = float(sys.argv[5])
+max_epochs = int(sys.argv[6])
+downsample = int(sys.argv[7])
 droprate = 0.5
+
+# name = "rnn1_class"
+# classification = False
+# timesteps = 1
+# batch_size = 5
+# learn_rate = 1e-4
+# max_epochs = 50
+# downsample = 2
+# droprate = 0.5
 
 if classification:
     loss = "categorical_crossentropy"
@@ -78,7 +85,7 @@ validGen = validGen.generate(labels, partition["valid"])
 
 
 # Create model
-model = tdist_unet(timesteps=timesteps, downsample=downsample, droprate = droprate)
+model = tdist_unet(classification=classification, timesteps=timesteps, downsample=downsample, droprate = droprate)
 model.compile(optimizer=optimizer,
               loss=loss,
               metrics=['accuracy', 'mae', 'mse'])
