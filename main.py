@@ -66,7 +66,7 @@ if classification:
 else:
     # Rescale to [0;1]; merge category 0+1
     label_converter = {0: 0.0, 1: 0.0, 2: 0.03, 3: 0.155, 4: 0.38, 5: 0.63, 6: 0.88}
-    loss = "mean_absolute_error"
+    loss = "mse"
     metrics = ['acc', 'mae', 'mse']
 labels = {key: label_converter[val] for key, val in labels.items()}
 
