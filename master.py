@@ -20,13 +20,22 @@ from TBCallbacks import TrainValTensorBoard
 # Set hyperparameters
 # timesteps = int(sys.argv[1])
 # batch_size = int(sys.argv[2])
-timesteps = 5
-batch_size = 1
+name = "rnn1"
+timesteps = 1
+batch_size = 5
 learn_rate = 1e-4
 max_epochs = 50
-name = "time"
 downsample = 2
 droprate = 0.5
+
+if (timesteps >= 2) and (timesteps <= 5):
+    mode = "time"
+    loss = "categorical_crossentropy"
+elif timesteps == 1:
+    mode = "single"
+    loss = "mean_absolute_error"
+else:
+    raise Exception("Invalid number of timesteps (must be between 1-5)")
 
 
 # Load data partitions
@@ -50,9 +59,9 @@ class_weights = class_weight.compute_class_weight(class_weight='balanced',
                                                   y=train_labels)
 
 # Create data generators
-trainGen = DataGenerator(name+"_train", batch_size=batch_size, timesteps=timesteps,
+trainGen = DataGenerator(mode+"_train", batch_size=batch_size, timesteps=timesteps,
                          channels=1, dim_x=142, dim_y=322, dim_z=262, shuffle=True)
-validGen = DataGenerator(name+"_valid", batch_size=batch_size, timesteps=timesteps,
+validGen = DataGenerator(mode+"_valid", batch_size=batch_size, timesteps=timesteps,
                          channels=1, dim_x=142, dim_y=322, dim_z=262, shuffle=True)
 
 trainGen = trainGen.generate(labels, partition["train"])
@@ -62,26 +71,35 @@ validGen = validGen.generate(labels, partition["valid"])
 # Create model
 model = tdist_unet(timesteps=timesteps, downsample=downsample, droprate = droprate)
 model.compile(optimizer=Adam(lr = learn_rate),
-              loss='mean_absolute_error',
+              loss=loss,
               metrics=['accuracy', 'mae', 'mse'])
 
+# Setup output folder
+directory = "./output/"+name+"/"
+if not os.path.exists(directory):
+    os.makedirs(directory)
+
+with open("./output/"+name+"/config.txt", "w") as txt:
+    txt.write("name = {0}\n".format(name))
+    txt.write("timesteps = {0}\n".format(timesteps))
+    txt.write("batch_size = {0}\n".format(batch_size))
+    txt.write("learn_rate = {0}\n".format(learn_rate))
+    txt.write("max_epochs= {0}\n".format(max_epochs))
+    txt.write("downsample = {0}\n".format(downsample))
+    txt.write("droprate = {0}\n".format(droprate))
+    txt.write("mode = {0}\n".format(mode))
+    txt.write("loss = {0}\n".format(loss))
 
 # Set callbacks
 callbacks_list = []
 
-directory = "./models/"+name+"/"
-if not os.path.exists(directory):
-    os.makedirs(directory)
 modeldir = directory + "epoch_{epoch:02d}-valacc_{val_acc:.2f}.hdf5"
-
 checkpoint = ModelCheckpoint(modeldir, monitor='val_acc', save_weights_only=False, save_best_only=True, mode='max', verbose=1)
 callbacks_list.append(checkpoint) # saves model weights
-# Load model weights using: model.load_weights(modeldir)
 
 # tensorboard = TensorBoard(log_dir='./logs', histogram_freq=1, write_graph=True, write_images=True)
-tensorboard= TrainValTensorBoard(log_dir="./logs", histogram_freq=0, write_graph=True, write_images=True) # custom TB writer object
+tensorboard= TrainValTensorBoard(log_dir="./output/"+name+"/logs", histogram_freq=0, write_graph=True, write_images=True) # custom TB writer object
 callbacks_list.append(tensorboard) # add tensorboard logging
-# Access tensorboard using: tensorboard --logdir path_to_current_dir/graph
 
 
 # Train model
@@ -95,7 +113,5 @@ hist = model.fit_generator(generator = trainGen,
 
 
 # Dump history to disk
-if not os.path.exists("../output/"):
-    os.makedirs("../output/")
-with open("../output/"+name+"_history.pkl", 'wb') as f:
+with open("./output/logs/"+name+"_history.pkl", 'wb') as f:
     pickle.dump(hist.history, f, pickle.HIGHEST_PROTOCOL)
