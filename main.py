@@ -37,11 +37,6 @@ overfit = bool(sys.argv[9])
 # droprate = 0.5
 # overfit = True
 
-if classification:
-    loss = "categorical_crossentropy"
-else:
-    loss = "mean_absolute_error"
-
 if learn_rate > 0:
     optimizer = Adam(lr = learn_rate)
     opt = "Adam"
@@ -66,9 +61,13 @@ labels = target.set_index("StId").to_dict()["ERU.M2"]
 if classification:
     # combine 0+1 as 0 = no emph in scan, 1 = no emph in region
     label_converter = {0: 0, 1: 0, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6}
+    loss = "categorical_crossentropy"
+    metrics = ['categorical_accuracy', 'mae', 'mse']
 else:
     # Rescale to [0;1]; merge category 0+1
     label_converter = {0: 0.0, 1: 0.0, 2: 0.03, 3: 0.155, 4: 0.38, 5: 0.63, 6: 0.88}
+    loss = "mean_absolute_error"
+    metrics = ['accuracy', 'mae', 'mse']
 labels = {key: label_converter[val] for key, val in labels.items()}
 
 
@@ -93,7 +92,7 @@ validGen = validGen.generate(labels, partition["valid"])
 model = tdist_unet(classification=classification, timesteps=timesteps, downsample=downsample, droprate = droprate)
 model.compile(optimizer=optimizer,
               loss=loss,
-              metrics=['accuracy', 'mae', 'mse'])
+              metrics=metrics)
 
 # Setup output folder
 directory = "./output/"+name+"/"
