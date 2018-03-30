@@ -25,6 +25,7 @@ learn_rate = float(sys.argv[5])
 max_epochs = int(sys.argv[6])
 downsample = int(sys.argv[7])
 droprate = 0.5
+overfit = True
 
 # name = "rnn1_class"
 # classification = False
@@ -51,6 +52,10 @@ else:
 # Load data partitions
 with open("./data/partition.pkl", 'rb') as f:
     partition = pickle.load(f)
+
+if overfit:
+    partition["train"] = partition["train"][:20]
+    partition["valid"] = partition["valid"][:20]
 
 # Load labels
 target = pd.read_csv("./data/ERU_Scores_Ids_5-Scans_Validity-0_VisuallyScored.csv")
