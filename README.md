@@ -8,7 +8,7 @@ Clone the repository and run the following command from the command line:
 
 `CUDA_VISIBLE_DEVICES=0 python main.py classification num_timesteps batch_size learn_rate max_epochs downsample`
 
-For instance, the following command 
+For instance, the command 
 
 `CUDA_VISIBLE_DEVICES=0 python main.py True 1 5 1e-4 50 2`
 
