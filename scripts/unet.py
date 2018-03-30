@@ -118,9 +118,9 @@ def tdist_unet(classification=False, timesteps=1, downsample=1, droprate=0.5):
     flatten_44 = TimeDistributed(Flatten(name="flatten_44"), name="TD_flatten_44")(down_43)
 
     if timesteps > 1:
-        lstm_45 = Bidirectional(LSTM(32, return_sequences=True, name="lstm_45"), name="bidir_lstm_45")(flatten_44)
+        lstm_45 = Bidirectional(LSTM(64, return_sequences=True, name="lstm_45"), name="bidir_lstm_45")(flatten_44)
         drop_46 = Dropout(rate=droprate, seed=2, name="drop_46")(lstm_45)
-        lstm_47 = Bidirectional(LSTM(64, return_sequences=True, name="lstm_47"), name="bidir_lstm_47")(drop_46)
+        lstm_47 = Bidirectional(LSTM(32, return_sequences=True, name="lstm_47"), name="bidir_lstm_47")(drop_46)
         drop_48 = Dropout(rate=droprate, seed=2, name="drop_48")(lstm_47)
         lstm_49 = LSTM(classes, activation="softmax", return_sequences=False, name="lstm_49")(drop_48) # 6 classes
         output_50 = Reshape(target_shape=(classes, 1, 1, 1, 1), name="output_50")(lstm_49)
@@ -128,9 +128,9 @@ def tdist_unet(classification=False, timesteps=1, downsample=1, droprate=0.5):
         model = Model(inputs=input_1, outputs=output_50)
     else:
         # output_44 = TimeDistributed(Conv3D(filters=classes, kernel_size=(1, 1, 1), data_format="channels_first", name="conv_44"), name="TD_conv_44")(down_43)
-        dense_45 = Dense(units=64, activation="relu", name="dense_45")(flatten_44)
+        dense_45 = Dense(units=128, activation="relu", name="dense_45")(flatten_44)
         drop_46 = Dropout(rate=droprate, seed=2, name="drop_46")(dense_45)
-        dense_47 = Dense(units=128, activation="relu", name="dense_47")(drop_46)
+        dense_47 = Dense(units=64, activation="relu", name="dense_47")(drop_46)
         drop_48 = Dropout(rate=droprate, seed=2, name="drop_48")(dense_47)
         dense_49 = Dense(units=classes, activation="softmax", name="dense_49")(drop_48)
         output_50 = Flatten(name="output_50")(dense_49)
