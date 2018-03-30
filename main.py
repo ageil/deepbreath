@@ -4,17 +4,16 @@ import pandas as pd
 import os
 import sys
 import pickle
-import h5py
 from sklearn.utils import class_weight
 
 # Keras
 from keras.optimizers import Adam, Nadam
-from keras.callbacks import ModelCheckpoint, TensorBoard, EarlyStopping
+from keras.callbacks import ModelCheckpoint
 
 # Custom
-from data_gen import DataGenerator
-from unet import tdist_unet
-from TBCallbacks import TrainValTensorBoard
+from scripts.data_gen import DataGenerator
+from scripts.unet import tdist_unet
+from scripts.TBCallbacks import TrainValTensorBoard
 
 
 # Set hyperparameters
