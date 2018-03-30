@@ -2,10 +2,12 @@
 import numpy as np
 
 class DataGenerator(object):
-    def __init__(self, folder, batch_size=16, timesteps=1, channels=1, 
+    def __init__(self, folder, classification=False, batch_size=16, timesteps=1, channels=1,
                  dim_x=142, dim_y=322, dim_z=262, shuffle=True):
         'Initialization'
-        self.folder = folder
+        self.mode = "single" if timesteps == 1 else "time"
+        self.folder = self.mode + "_" + folder
+        self.classification = classification
         self.timesteps = timesteps
         self.channels = channels
         self.dim_x = dim_x
@@ -41,8 +43,9 @@ class DataGenerator(object):
             path = './data/'+self.folder+"/vol_"+str(ID) +".npy"
             X[i, :, :, :, :, :] = np.load(path)
             y[i, 0, 0, 0, 0, 0] = labels[ID]
-        
-#        return X, self.__onehot(y, labels)
+
+        if self.classification:
+            return X, self.__onehot(labels, y)
         return X, y
     
     def generate(self, labels, IDs):

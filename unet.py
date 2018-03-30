@@ -7,7 +7,7 @@ from keras.layers.wrappers import TimeDistributed, Bidirectional
 from keras.layers.pooling import MaxPooling3D
 
 
-def tdist_unet(timesteps=1, downsample=1, droprate=0.5):
+def tdist_unet(classification=False, timesteps=1, downsample=1, droprate=0.5):
     assert timesteps > 0, "timesteps must be larger than 0"
     assert timesteps <= 5, "timesteps cannot exceed 5"
     assert downsample > 0, "input downsampling factor must be 1 (none) or larger"
@@ -16,17 +16,20 @@ def tdist_unet(timesteps=1, downsample=1, droprate=0.5):
         assert droprate >= 0, "dropout rate cannot be negative"
         assert droprate <= 1, "dropout rate cannot exceed 1"
 
+    if classification:
+        classes = 6
+    else:
+        classes = 1
+
     # block 1
     input_1 = Input(shape=(timesteps, 1, 142, 322, 262), name="input_1")  # timesteps x channels x imgsize
-    mpool = TimeDistributed(
-        MaxPooling3D(pool_size=(downsample, downsample, downsample), data_format="channels_first", name="mpool3D"),
-        name="TD_mpool3D")(input_1)
+    mpool = TimeDistributed(MaxPooling3D(pool_size=(downsample, downsample, downsample), data_format="channels_first", name="mpool3D"),
+                            name="TD_mpool3D")(input_1)
     conv_1 = TimeDistributed(Conv3D(filters=6, kernel_size=(1, 5, 5), data_format="channels_first", name="conv_1"),
                              name="TD_conv_1")(mpool)
     relu_2 = TimeDistributed(Activation('relu', name="ReLU_2"), name="TD_ReLU_2")(conv_1)
-    down_3 = TimeDistributed(
-        Conv3D(filters=8, kernel_size=(1, 1, 1), strides=(2, 2, 2), data_format="channels_first", name="down_3"),
-        name="TD_down_3")(relu_2)
+    down_3 = TimeDistributed(Conv3D(filters=8, kernel_size=(1, 1, 1), strides=(2, 2, 2), data_format="channels_first", name="down_3"),
+                             name="TD_down_3")(relu_2)
 
     # block 2
     relu_4 = TimeDistributed(Activation('relu', name="ReLU_4"), name="TD_ReLU_4")(down_3)
@@ -50,16 +53,14 @@ def tdist_unet(timesteps=1, downsample=1, droprate=0.5):
                               name="TD_conv_13")(relu_12)
 
     # skip connection 2
-    crop_15 = TimeDistributed(
-        Cropping3D(cropping=((0, 0), (4, 4), (4, 4)), data_format="channels_first", name="crop_15"), name="TD_crop_15")(
-        merge_8)
+    crop_15 = TimeDistributed(Cropping3D(cropping=((0, 0), (4, 4), (4, 4)), data_format="channels_first", name="crop_15"),
+                              name="TD_crop_15")(merge_8)
     merge_14 = Add(name="merge_14")([conv_13, crop_15])
 
     # block 4
     relu_16 = TimeDistributed(Activation("relu", name="ReLU_16"), name="TD_ReLU_16")(merge_14)
-    down_17 = TimeDistributed(
-        Conv3D(filters=16, kernel_size=(1, 1, 1), strides=(1, 2, 2), data_format="channels_first", name="down_17"),
-        name="TD_down_17")(relu_16)
+    down_17 = TimeDistributed(Conv3D(filters=16, kernel_size=(1, 1, 1), strides=(1, 2, 2), data_format="channels_first", name="down_17"),
+                              name="TD_down_17")(relu_16)
     relu_18 = TimeDistributed(Activation("relu", name="ReLU_18"), name="TD_ReLU_18")(down_17)
     conv_19 = TimeDistributed(Conv3D(filters=16, kernel_size=(1, 3, 3), data_format="channels_first", name="conv_19"),
                               name="TD_conv_19")(relu_18)
@@ -68,9 +69,8 @@ def tdist_unet(timesteps=1, downsample=1, droprate=0.5):
                               name="TD_conv_21")(relu_20)
 
     # skip connection 3
-    crop_23 = TimeDistributed(
-        Cropping3D(cropping=((0, 0), (1, 1), (1, 1)), data_format="channels_first", name="crop_23"), name="TD_crop_23")(
-        down_17)
+    crop_23 = TimeDistributed(Cropping3D(cropping=((0, 0), (1, 1), (1, 1)), data_format="channels_first", name="crop_23"),
+                              name="TD_crop_23")(down_17)
     merge_22 = Add(name="merge_22")([conv_21, crop_23])
 
     # block 5
@@ -82,16 +82,14 @@ def tdist_unet(timesteps=1, downsample=1, droprate=0.5):
                               name="TD_conv_27")(relu_26)
 
     # skip connection 4
-    crop_29 = TimeDistributed(
-        Cropping3D(cropping=((0, 0), (1, 1), (1, 1)), data_format="channels_first", name="crop_29"), name="TD_crop_29")(
-        merge_22)
+    crop_29 = TimeDistributed(Cropping3D(cropping=((0, 0), (1, 1), (1, 1)), data_format="channels_first", name="crop_29"),
+                              name="TD_crop_29")(merge_22)
     merge_28 = Add(name="merge_28")([conv_27, crop_29])
 
     # block 6
     relu_30 = TimeDistributed(Activation("relu", name="ReLU_30"), name="TD_ReLU_30")(merge_28)
-    down_31 = TimeDistributed(
-        Conv3D(filters=32, kernel_size=(1, 1, 1), strides=(1, 2, 2), data_format="channels_first", name="down_31"),
-        name="TD_down_31")(relu_30)
+    down_31 = TimeDistributed(Conv3D(filters=32, kernel_size=(1, 1, 1), strides=(1, 2, 2), data_format="channels_first", name="down_31"),
+                              name="TD_down_31")(relu_30)
     relu_32 = TimeDistributed(Activation("relu", name="ReLU_32"), name="TD_ReLU_32")(down_31)
     conv_33 = TimeDistributed(Conv3D(filters=32, kernel_size=(1, 1, 1), data_format="channels_first", name="conv_33"),
                               name="TD_conv_33")(relu_32)
@@ -115,9 +113,8 @@ def tdist_unet(timesteps=1, downsample=1, droprate=0.5):
 
     # block 8
     relu_42 = TimeDistributed(Activation("relu", name="ReLU_42"), name="TD_ReLU_42")(merge_41)
-    down_43 = TimeDistributed(
-        AveragePooling3D(pool_size=relu_42._keras_shape[-3:], data_format="channels_first", name="down_43"),
-        name="TD_down_43")(relu_42)
+    down_43 = TimeDistributed(AveragePooling3D(pool_size=relu_42._keras_shape[-3:], data_format="channels_first", name="down_43"),
+                              name="TD_down_43")(relu_42)
 
     if timesteps > 1:
         flatten_44 = TimeDistributed(Flatten(name="flatten_44"), name="TD_flatten_44")(down_43)
@@ -125,13 +122,12 @@ def tdist_unet(timesteps=1, downsample=1, droprate=0.5):
         drop_46 = Dropout(rate=droprate, seed=2, name="drop_46")(lstm_45)
         lstm_47 = Bidirectional(LSTM(64, return_sequences=True, name="lstm_46"), name="bidir_lstm_46")(drop_46)
         drop_48 = Dropout(rate=droprate, seed=2, name="drop_48")(lstm_47)
-        lstm_49 = LSTM(1, activation="softmax", return_sequences=False, name="lstm_47")(drop_48)
-        output_50 = Reshape(target_shape=(1, 1, 1, 1, 1), name="output_48")(lstm_49)
+        lstm_49 = LSTM(classes, activation="softmax", return_sequences=False, name="lstm_47")(drop_48) # 6 classes
+        output_50 = Reshape(target_shape=(classes, 1, 1, 1, 1), name="output_48")(lstm_49)
         model = Model(inputs=input_1, outputs=output_50)
     else:
-        output_44 = TimeDistributed(
-            Conv3D(filters=1, kernel_size=(1, 1, 1), data_format="channels_first", name="conv_44"), name="TD_conv_44")(
-            down_43)
+        output_44 = TimeDistributed(Conv3D(filters=classes, kernel_size=(1, 1, 1), data_format="channels_first", name="conv_44"),
+                                    name="TD_conv_44")(down_43)
         model = Model(inputs=input_1, outputs=output_44)
 
     return model
