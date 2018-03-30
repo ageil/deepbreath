@@ -1,6 +1,0 @@
-timesteps = 5
-batch_size = 4
-learn_rate = 1e-4
-max_epochs = 50
-name = time
-downsample = 2
