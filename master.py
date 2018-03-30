@@ -113,5 +113,5 @@ hist = model.fit_generator(generator = trainGen,
 
 
 # Dump history to disk
-with open("./output/logs/"+name+"_history.pkl", 'wb') as f:
+with open("./output/"+name+"/logs/history.pkl", 'wb') as f:
     pickle.dump(hist.history, f, pickle.HIGHEST_PROTOCOL)
