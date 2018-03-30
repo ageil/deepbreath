@@ -2,6 +2,21 @@
 
 This project aims to predict emphysema presence in human lungs from CT scans by utilizing convolutional and recurrent neural networks.
 
+## Setup
+
+Clone the repository and run the following command from the command line:
+
+`CUDA_VISIBLE_DEVICES=0 python main.py isClassification num_timesteps batch_size learn_rate max_epochs downsample_factor`
+
+For instance, the following command 
+
+`CUDA_VISIBLE_DEVICES=0 python main.py True 1 5 1e-4 50 2`
+
+will launch a training session on GPU #0 as a classification task with 1 time step, a batch size of 5, learning rate of 1e-4 for 50 epochs with the initial images downscaled by a factor of 2. 
+
+Note that setting the learning rate to 0 will change the optimizer from Adam to the Nesterov Adam optimizer.
+
+## Data summary
 
 | Label | Full  | Training | Validation | Test   |
 |:-----:| -----:| --------:| ----------:| ------:|
