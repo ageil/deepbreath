@@ -4,17 +4,16 @@ import pandas as pd
 import os
 import sys
 import pickle
-import h5py
 from sklearn.utils import class_weight
 
 # Keras
 from keras.optimizers import Adam, Nadam
-from keras.callbacks import ModelCheckpoint, TensorBoard, EarlyStopping
+from keras.callbacks import ModelCheckpoint
 
 # Custom
-from data_gen import DataGenerator
-from unet import tdist_unet
-from TBCallbacks import TrainValTensorBoard
+from scripts.data_gen import DataGenerator
+from scripts.unet import tdist_unet
+from scripts.TBCallbacks import TrainValTensorBoard
 
 
 # Set hyperparameters
@@ -62,7 +61,7 @@ if classification:
     # combine 0+1 as 0 = no emph in scan, 1 = no emph in region
     label_converter = {0: 0, 1: 0, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6}
 else:
-    # Rescale labels;
+    # Rescale to [0;1]; merge category 0+1
     label_converter = {0: 0.0, 1: 0.0, 2: 0.03, 3: 0.155, 4: 0.38, 5: 0.63, 6: 0.88}
 labels = {key: label_converter[val] for key, val in labels.items()}
 
