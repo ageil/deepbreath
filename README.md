@@ -6,7 +6,7 @@ This project aims to predict emphysema presence in human lungs from CT scans by 
 
 Clone the repository and run the following command from the command line:
 
-`CUDA_VISIBLE_DEVICES=0 python main.py isClassification num_timesteps batch_size learn_rate max_epochs downsample_factor`
+`CUDA_VISIBLE_DEVICES=0 python main.py classification num_timesteps batch_size learn_rate max_epochs downsample_factor`
 
 For instance, the following command 
 
