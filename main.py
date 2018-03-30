@@ -24,8 +24,8 @@ batch_size = int(sys.argv[4])
 learn_rate = float(sys.argv[5])
 max_epochs = int(sys.argv[6])
 downsample = int(sys.argv[7])
-droprate = 0.5
-overfit = True
+droprate = float(sys.argv[8])
+overfit = bool(sys.argv[9])
 
 # name = "rnn1_class"
 # classification = False
