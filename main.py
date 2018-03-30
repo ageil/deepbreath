@@ -27,7 +27,7 @@ downsample = int(sys.argv[7])
 droprate = float(sys.argv[8])
 overfit = bool(sys.argv[9])
 
-# name = "rnn1_class"
+# name = "test"
 # classification = False
 # timesteps = 1
 # batch_size = 5
@@ -35,6 +35,7 @@ overfit = bool(sys.argv[9])
 # max_epochs = 50
 # downsample = 2
 # droprate = 0.5
+# overfit = True
 
 if classification:
     loss = "categorical_crossentropy"
