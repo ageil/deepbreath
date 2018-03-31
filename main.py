@@ -89,7 +89,7 @@ validGen = validGen.generate(labels, partition["valid"])
 
 
 # Create model
-model = tdist_unet(classification=classification, timesteps=timesteps, downsample=downsample, droprate = droprate)
+model = tdist_unet(classification=classification, timesteps=timesteps, downsample=downsample, droprate=droprate)
 model.compile(optimizer=optimizer,
               loss=loss,
               metrics=metrics)
@@ -137,7 +137,7 @@ hist = model.fit_generator(generator = trainGen,
                            steps_per_epoch = len(partition["train"])//batch_size,
                            validation_data = validGen,
                            validation_steps = len(partition["valid"])//batch_size,
-                           class_weight = class_weights,
+                           # class_weight = class_weights,
                            epochs = max_epochs,
                            callbacks=callbacks_list)
 
