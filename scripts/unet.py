@@ -5,6 +5,7 @@ from keras.layers.convolutional import Conv3D, Cropping3D
 from keras.layers.recurrent import LSTM
 from keras.layers.wrappers import TimeDistributed, Bidirectional
 from keras.layers.pooling import MaxPooling3D
+from keras.initializers import glorot_normal
 
 
 def tdist_unet(classification=False, timesteps=1, downsample=1, droprate=0.5):
@@ -126,11 +127,11 @@ def tdist_unet(classification=False, timesteps=1, downsample=1, droprate=0.5):
 
         model = Model(inputs=input_1, outputs=output_50)
     else:
-        dense_45 = Dense(units=512, activation="relu", name="dense_45")(flatten_44)
+        dense_45 = Dense(units=512, activation="relu", kernel_initializer=glorot_normal(2), name="dense_45")(flatten_44)
         drop_46 = Dropout(rate=droprate, seed=2, name="drop_46")(dense_45)
-        dense_47 = Dense(units=256, activation="relu", name="dense_47")(drop_46)
+        dense_47 = Dense(units=256, activation="relu", kernel_initializer=glorot_normal(2), name="dense_47")(drop_46)
         drop_48 = Dropout(rate=droprate, seed=2, name="drop_48")(dense_47)
-        dense_49 = Dense(units=classes, activation="softmax", name="dense_49")(drop_48)
+        dense_49 = Dense(units=classes, activation="softmax", kernel_initializer=glorot_normal(2), name="dense_49")(drop_48)
         output_50 = Flatten(name="output_50")(dense_49)
 
         model = Model(inputs=input_1, outputs=output_50)
