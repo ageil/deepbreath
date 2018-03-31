@@ -113,9 +113,9 @@ def tdist_unet(classification=False, timesteps=1, downsample=1, droprate=0.5):
 
     # block 8
     relu_42 = TimeDistributed(Activation("relu", name="ReLU_42"), name="TD_ReLU_42")(merge_41)
-    down_43 = TimeDistributed(AveragePooling3D(pool_size=relu_42._keras_shape[-3:], data_format="channels_first", name="down_43"),
-                              name="TD_down_43")(relu_42)
-    flatten_44 = TimeDistributed(Flatten(name="flatten_44"), name="TD_flatten_44")(down_43)
+    # down_43 = TimeDistributed(AveragePooling3D(pool_size=relu_42._keras_shape[-3:], data_format="channels_first", name="down_43"),
+    #                           name="TD_down_43")(relu_42)
+    flatten_44 = TimeDistributed(Flatten(name="flatten_44"), name="TD_flatten_44")(relu_42)
 
     if timesteps > 1:
         lstm_45 = Bidirectional(LSTM(64, return_sequences=True, name="lstm_45"), name="bidir_lstm_45")(flatten_44)
