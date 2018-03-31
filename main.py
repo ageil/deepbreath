@@ -25,7 +25,7 @@ learn_rate = float(sys.argv[5])
 max_epochs = int(sys.argv[6])
 downsample = int(sys.argv[7])
 droprate = float(sys.argv[8])
-overfit = bool(sys.argv[9])
+debug = bool(sys.argv[9])
 
 # name = "test"
 # classification = False
@@ -35,7 +35,7 @@ overfit = bool(sys.argv[9])
 # max_epochs = 50
 # downsample = 2
 # droprate = 0.5
-# overfit = True
+# debug = True
 
 if learn_rate > 0:
     optimizer = Adam(lr = learn_rate)
@@ -49,7 +49,7 @@ else:
 with open("./data/partition.pkl", 'rb') as f:
     partition = pickle.load(f)
 
-if overfit:
+if debug:
     partition["train"] = partition["train"][:20]
     partition["valid"] = partition["valid"][:20]
 
@@ -101,6 +101,7 @@ if not os.path.exists(directory):
 
 with open("./output/"+name+"/config.txt", "w") as txt:
     txt.write("name = {0}\n".format(name))
+    txt.write("classification = {0}\n".format(classification))
     txt.write("timesteps = {0}\n".format(timesteps))
     txt.write("batch_size = {0}\n".format(batch_size))
     txt.write("learn_rate = {0}\n".format(learn_rate))
@@ -109,6 +110,7 @@ with open("./output/"+name+"/config.txt", "w") as txt:
     txt.write("droprate = {0}\n".format(droprate))
     txt.write("loss = {0}\n".format(loss))
     txt.write("opt = {0}\n".format(opt))
+    txt.write("debug = {0}\n".format(debug))
 
 # Set callbacks
 callbacks_list = []
