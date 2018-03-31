@@ -21,7 +21,7 @@ def tdist_unet(classification=False, timesteps=1, downsample=1, droprate=0.5):
 
     # block 1
     input_1 = Input(shape=(timesteps, 1, 142, 322, 262), name="input_1")  # timesteps x channels x imgsize
-    # input_1 = Input(shape=(timesteps, 1, 108, 284, 228), name="input_1")  # timesteps x channels x imgsize
+    # input_1 = Input(shape=(timesteps, 1, 108, 284, 228), name="input_1")  # timesteps x channels x imgsize # original dimensions
     mpool = TimeDistributed(MaxPooling3D(pool_size=(downsample, downsample, downsample), data_format="channels_first", name="mpool3D"),
                             name="TD_mpool3D")(input_1)
     conv_1 = TimeDistributed(Conv3D(filters=6, kernel_size=(1, 5, 5), data_format="channels_first", name="conv_1"),
@@ -127,9 +127,9 @@ def tdist_unet(classification=False, timesteps=1, downsample=1, droprate=0.5):
 
         model = Model(inputs=input_1, outputs=output_50)
     else:
-        dense_45 = Dense(units=512, activation="relu", kernel_initializer=glorot_normal(2), name="dense_45")(flatten_44)
+        dense_45 = Dense(units=256, activation="relu", kernel_initializer=glorot_normal(2), name="dense_45")(flatten_44)
         drop_46 = Dropout(rate=droprate, seed=2, name="drop_46")(dense_45)
-        dense_47 = Dense(units=256, activation="relu", kernel_initializer=glorot_normal(2), name="dense_47")(drop_46)
+        dense_47 = Dense(units=128, activation="relu", kernel_initializer=glorot_normal(2), name="dense_47")(drop_46)
         drop_48 = Dropout(rate=droprate, seed=2, name="drop_48")(dense_47)
         dense_49 = Dense(units=classes, activation="softmax", kernel_initializer=glorot_normal(2), name="dense_49")(drop_48)
         output_50 = Flatten(name="output_50")(dense_49)
