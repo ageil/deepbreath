@@ -7,11 +7,12 @@ import pickle
 from sklearn.utils import class_weight
 
 # Keras
-from keras.optimizers import Adam, Nadam
+from keras.optimizers import Adam, Nadam, RMSprop, Adagrad, SGD
 from keras.callbacks import ModelCheckpoint
 
 # Custom
 from scripts.data_gen import DataGenerator
+# from scripts.unet_original import unet
 from scripts.unet import tdist_unet
 from scripts.TBCallbacks import TrainValTensorBoard
 
@@ -30,9 +31,9 @@ from scripts.TBCallbacks import TrainValTensorBoard
 name = "test"
 classification = True
 timesteps = 1
-batch_size = 3
-learn_rate = 0
-max_epochs = 15
+batch_size = 1
+learn_rate = 1e-4
+max_epochs = 10
 downsample = 4 # 1 = no downsampling, 2 = halve input dims etc.
 droprate = 0.0 # fraction to drop
 debug = True
@@ -40,6 +41,12 @@ debug = True
 if learn_rate > 0:
     optimizer = Adam(lr = learn_rate)
     opt = "Adam"
+    # optimizer = Adagrad(lr=learn_rate)
+    # opt = "Adagrad"
+    # optimizer = RMSprop(lr = learn_rate)
+    # opt = "RMSprop"
+    # optimizer = SGD(lr = learn_rate)
+    # opt = "SGD"
 else:
     optimizer = Nadam()
     opt = "Nadam"
@@ -51,7 +58,7 @@ with open("./data/partition.pkl", 'rb') as f:
 
 if debug:
     partition["train"] = partition["train"][:20]
-    partition["valid"] = partition["valid"][:20]
+    partition["valid"] = partition["valid"][:5]
 
 # Load labels
 target = pd.read_csv("./data/ERU_Scores_Ids_5-Scans_Validity-0_VisuallyScored.csv")
@@ -60,7 +67,7 @@ labels = target.set_index("StId").to_dict()["ERU.M2"]
 # Rescale labels
 if classification:
     # combine 0+1 as 0 = no emph in scan, 1 = no emph in region
-    label_converter = {0: 0, 1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5}
+    label_converter = {0: 0, 1: 0, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6}
     loss = "categorical_crossentropy"
     metrics = ['acc', 'mae', 'mse']
 else:
@@ -89,6 +96,7 @@ validGen = validGen.generate(labels, partition["valid"])
 
 
 # Create model
+# model = unet(downsample=downsample)
 model = tdist_unet(classification=classification, timesteps=timesteps, downsample=downsample, droprate=droprate)
 model.compile(optimizer=optimizer,
               loss=loss,
@@ -116,19 +124,19 @@ with open("./output/"+name+"/config.txt", "w") as txt:
 callbacks_list = []
 
 # save model weights if best
-savepath = directory + "/weights/"
+savepath = directory + "weights/"
 if not os.path.exists(savepath):
     os.makedirs(savepath)
 modeldir = savepath + "epoch_{epoch:02d}-valloss_{val_loss:.2f}-valacc_{val_acc:.2f}.hdf5"
-checkpoint = ModelCheckpoint(modeldir, monitor='val_acc', save_weights_only=False, save_best_only=True, mode='min', verbose=1)
+checkpoint = ModelCheckpoint(modeldir, monitor='val_loss', save_weights_only=False, save_best_only=True, mode='min', verbose=1)
 callbacks_list.append(checkpoint)
 
 # early stopping
-# early_stopping = EarlyStopping(monitor='val_loss', patience=2) # stop if no improvements after 2 epochs
+# early_stopping = EarlyStopping(monitor='val_loss', patience=5) # stop if no improvements after 5 epochs
 # callbacks_list.append(early_stopping)
 
-# tensorboard = TensorBoard(log_dir='./logs', histogram_freq=1, write_graph=True, write_images=True)
-tensorboard= TrainValTensorBoard(log_dir="./output/"+name+"/logs", histogram_freq=0, write_graph=True, write_images=True) # custom TB writer object
+# custom tensorboard logging
+tensorboard= TrainValTensorBoard(log_dir=directory+"logs/", histogram_freq=0, write_graph=True, write_images=True) # custom TB writer object
 callbacks_list.append(tensorboard) # add tensorboard logging
 
 
