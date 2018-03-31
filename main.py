@@ -17,25 +17,25 @@ from scripts.TBCallbacks import TrainValTensorBoard
 
 
 # Set hyperparameters
-name = sys.argv[1]
-classification = bool(sys.argv[2])
-timesteps = int(sys.argv[3])
-batch_size = int(sys.argv[4])
-learn_rate = float(sys.argv[5])
-max_epochs = int(sys.argv[6])
-downsample = int(sys.argv[7])
-droprate = float(sys.argv[8])
-debug = bool(sys.argv[9])
+# name = sys.argv[1]
+# classification = bool(sys.argv[2])
+# timesteps = int(sys.argv[3])
+# batch_size = int(sys.argv[4])
+# learn_rate = float(sys.argv[5])
+# max_epochs = int(sys.argv[6])
+# downsample = int(sys.argv[7])
+# droprate = float(sys.argv[8])
+# debug = bool(sys.argv[9])
 
-# name = "test"
-# classification = True
-# timesteps = 1
-# batch_size = 3
-# learn_rate = 0
-# max_epochs = 15
-# downsample = 4 # 1 = no downsampling, 2 = halve input dims etc.
-# droprate = 0.0 # fraction to drop
-# debug = True
+name = "test"
+classification = True
+timesteps = 1
+batch_size = 3
+learn_rate = 0
+max_epochs = 15
+downsample = 4 # 1 = no downsampling, 2 = halve input dims etc.
+droprate = 0.0 # fraction to drop
+debug = True
 
 if learn_rate > 0:
     optimizer = Adam(lr = learn_rate)
@@ -60,7 +60,7 @@ labels = target.set_index("StId").to_dict()["ERU.M2"]
 # Rescale labels
 if classification:
     # combine 0+1 as 0 = no emph in scan, 1 = no emph in region
-    label_converter = {0: 0, 1: 0, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6}
+    label_converter = {0: 0, 1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5}
     loss = "categorical_crossentropy"
     metrics = ['acc', 'mae', 'mse']
 else:
@@ -137,7 +137,7 @@ hist = model.fit_generator(generator = trainGen,
                            steps_per_epoch = len(partition["train"])//batch_size,
                            validation_data = validGen,
                            validation_steps = len(partition["valid"])//batch_size,
-                           # class_weight = class_weights,
+                           class_weight = class_weights,
                            epochs = max_epochs,
                            callbacks=callbacks_list)
 
