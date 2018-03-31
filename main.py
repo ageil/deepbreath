@@ -27,14 +27,14 @@ downsample = int(sys.argv[7])
 droprate = float(sys.argv[8])
 debug = bool(sys.argv[9])
 
-# name = "test"
-# classification = False
+# name = "test2"
+# classification = True
 # timesteps = 1
-# batch_size = 5
+# batch_size = 1
 # learn_rate = 1e-4
 # max_epochs = 50
-# downsample = 2
-# droprate = 0.5
+# downsample = 4
+# droprate = 1.0
 # debug = True
 
 if learn_rate > 0:
@@ -82,7 +82,7 @@ class_weights = class_weight.compute_class_weight(class_weight='balanced',
 trainGen = DataGenerator("train", classification=classification, batch_size=batch_size,
                          timesteps=timesteps, channels=1, dim_x=142, dim_y=322, dim_z=262, shuffle=True)
 validGen = DataGenerator("valid", classification=classification, batch_size=batch_size,
-                         timesteps=timesteps, channels=1, dim_x=142, dim_y=322, dim_z=262, shuffle=True)
+                         timesteps=timesteps, channels=1, dim_x=142, dim_y=322, dim_z=262, shuffle=False)
 
 trainGen = trainGen.generate(labels, partition["train"])
 validGen = validGen.generate(labels, partition["valid"])
@@ -108,15 +108,18 @@ with open("./output/"+name+"/config.txt", "w") as txt:
     txt.write("max_epochs= {0}\n".format(max_epochs))
     txt.write("downsample = {0}\n".format(downsample))
     txt.write("droprate = {0}\n".format(droprate))
+    txt.write("debug = {0}\n".format(debug))
     txt.write("loss = {0}\n".format(loss))
     txt.write("opt = {0}\n".format(opt))
-    txt.write("debug = {0}\n".format(debug))
 
 # Set callbacks
 callbacks_list = []
 
 # save model weights if best
-modeldir = directory + "epoch_{epoch:02d}-valacc_{val_acc:.2f}.hdf5"
+savepath = directory + "/weights/"
+if not os.path.exists(savepath):
+    os.makedirs(savepath)
+modeldir = savepath + "epoch_{epoch:02d}-valacc_{val_acc:.2f}.hdf5"
 checkpoint = ModelCheckpoint(modeldir, monitor='val_acc', save_weights_only=False, save_best_only=True, mode='max', verbose=1)
 callbacks_list.append(checkpoint)
 
@@ -140,5 +143,5 @@ hist = model.fit_generator(generator = trainGen,
 
 
 # Dump history to disk
-with open("./output/"+name+"/logs/history.pkl", 'wb') as f:
+with open("./output/"+name+"/history.pkl", 'wb') as f:
     pickle.dump(hist.history, f, pickle.HIGHEST_PROTOCOL)
