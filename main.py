@@ -27,14 +27,14 @@ downsample = int(sys.argv[7])
 droprate = float(sys.argv[8])
 debug = bool(sys.argv[9])
 
-# name = "test2"
+# name = "test"
 # classification = True
 # timesteps = 1
-# batch_size = 1
-# learn_rate = 1e-4
-# max_epochs = 50
-# downsample = 4
-# droprate = 1.0
+# batch_size = 3
+# learn_rate = 0
+# max_epochs = 15
+# downsample = 4 # 1 = no downsampling, 2 = halve input dims etc.
+# droprate = 0.0 # fraction to drop
 # debug = True
 
 if learn_rate > 0:
@@ -64,10 +64,10 @@ if classification:
     loss = "categorical_crossentropy"
     metrics = ['acc', 'mae', 'mse']
 else:
-    # Rescale to [0;1]; merge category 0+1
+    # Rescale to [0;1]; merge 0+1
     label_converter = {0: 0.0, 1: 0.0, 2: 0.03, 3: 0.155, 4: 0.38, 5: 0.63, 6: 0.88}
-    loss = "mse"
-    metrics = ['acc', 'mae', 'mse']
+    loss = "mae"
+    metrics = ['acc', 'mae', 'msle']
 labels = {key: label_converter[val] for key, val in labels.items()}
 
 
@@ -119,8 +119,8 @@ callbacks_list = []
 savepath = directory + "/weights/"
 if not os.path.exists(savepath):
     os.makedirs(savepath)
-modeldir = savepath + "epoch_{epoch:02d}-valacc_{val_acc:.2f}.hdf5"
-checkpoint = ModelCheckpoint(modeldir, monitor='val_acc', save_weights_only=False, save_best_only=True, mode='max', verbose=1)
+modeldir = savepath + "epoch_{epoch:02d}-valloss_{val_loss:.2f}-valacc_{val_acc:.2f}.hdf5"
+checkpoint = ModelCheckpoint(modeldir, monitor='val_acc', save_weights_only=False, save_best_only=True, mode='min', verbose=1)
 callbacks_list.append(checkpoint)
 
 # early stopping
