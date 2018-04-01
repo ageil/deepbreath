@@ -26,7 +26,7 @@ learn_rate = float(sys.argv[5])
 max_epochs = int(sys.argv[6])
 downsample = int(sys.argv[7])
 droprate = float(sys.argv[8])
-debug = bool(sys.argv[9])
+# debug = bool(sys.argv[9])
 
 # name = "debug"
 # classification = True
@@ -56,9 +56,9 @@ else:
 with open("./data/partition.pkl", 'rb') as f:
     partition = pickle.load(f)
 
-if debug:
-    partition["train"] = partition["train"][:20]
-    partition["valid"] = partition["valid"][:5]
+# if debug:
+#     partition["train"] = partition["train"][:20]
+#     partition["valid"] = partition["valid"][:5]
 
 # Load labels
 target = pd.read_csv("./data/ERU_Scores_Ids_5-Scans_Validity-0_VisuallyScored.csv")
