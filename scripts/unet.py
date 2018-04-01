@@ -114,9 +114,7 @@ def tdist_unet(classification=False, timesteps=1, downsample=1, droprate=0.5):
     relu_42 = TimeDistributed(Activation("relu", name="ReLU_42"), name="TD_ReLU_42")(merge_41)
     # down_43 = TimeDistributed(AveragePooling3D(pool_size=relu_42._keras_shape[-3:], data_format="channels_first", name="down_43"),
     #                           name="TD_down_43")(relu_42)
-    print(relu_42._keras_shape)
     flatten_44 = TimeDistributed(Flatten(name="flatten_44"), name="TD_flatten_44")(relu_42) # batch_ze x timesteps x features
-    print(flatten_44._keras_shape)
 
     if timesteps > 1:
         lstm_45 = Bidirectional(LSTM(64, return_sequences=True, name="lstm_45"), name="bidir_lstm_45")(flatten_44)
@@ -129,16 +127,13 @@ def tdist_unet(classification=False, timesteps=1, downsample=1, droprate=0.5):
         model = Model(inputs=input_1, outputs=output_50)
     else:
         flatten_45 = Flatten(name="flatten_45")(flatten_44) # flatten temporal dimension
-        dense_45 = Dense(units=128, activation="relu", kernel_initializer=glorot_normal(2), name="dense_45")(flatten_45)
-        drop_46 = Dropout(rate=droprate, seed=2, name="drop_46")(dense_45)
-        dense_47 = Dense(units=64, activation="relu", kernel_initializer=glorot_normal(2), name="dense_47")(drop_46)
-        drop_48 = Dropout(rate=droprate, seed=2, name="drop_48")(dense_47)
-        dense_49 = Dense(units=classes, activation="softmax", kernel_initializer=glorot_normal(2), name="dense_49")(drop_48)
-        print(dense_49._keras_shape)
-        # output_50 = Flatten(name="output_50")(dense_49)
-        # print(output_50._keras_shape)
+        dense_46 = Dense(units=128, activation="relu", kernel_initializer=glorot_normal(2), name="dense_45")(flatten_45)
+        drop_47 = Dropout(rate=droprate, seed=2, name="drop_46")(dense_46)
+        dense_48 = Dense(units=64, activation="relu", kernel_initializer=glorot_normal(2), name="dense_47")(drop_47)
+        drop_49 = Dropout(rate=droprate, seed=2, name="drop_48")(dense_48)
+        output_50 = Dense(units=classes, activation="softmax", kernel_initializer=glorot_normal(2), name="dense_49")(drop_49)
 
-        model = Model(inputs=input_1, outputs=dense_49)
+        model = Model(inputs=input_1, outputs=output_50)
 
     # output_44 = TimeDistributed(Conv3D(filters=1, kernel_size=(1, 1, 1), data_format="channels_first", name="conv_44"), name="TD_conv_44")(down_43)
     # model = Model(inputs=input_1, outputs=output_44)

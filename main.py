@@ -8,7 +8,7 @@ from sklearn.utils import class_weight
 
 # Keras
 from keras.optimizers import Adam, Nadam, RMSprop, Adagrad, SGD
-from keras.callbacks import ModelCheckpoint
+from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
 
 # Custom
 from scripts.data_gen import DataGenerator
@@ -39,13 +39,13 @@ debug = bool(sys.argv[9])
 # debug = True
 
 if learn_rate > 0:
-    optimizer = Adam(lr = learn_rate)
+    optimizer = Adam(lr=learn_rate)
     opt = "Adam"
     # optimizer = Adagrad(lr=learn_rate)
     # opt = "Adagrad"
-    # optimizer = RMSprop(lr = learn_rate)
+    # optimizer = RMSprop(lr=learn_rate)
     # opt = "RMSprop"
-    # optimizer = SGD(lr = learn_rate)
+    # optimizer = SGD(lr=learn_rate)
     # opt = "SGD"
 else:
     optimizer = Nadam()
@@ -98,9 +98,7 @@ validGen = validGen.generate(labels, partition["valid"])
 # Create model
 # model = unet(downsample=downsample)
 model = tdist_unet(classification=classification, timesteps=timesteps, downsample=downsample, droprate=droprate)
-model.compile(optimizer=optimizer,
-              loss=loss,
-              metrics=metrics)
+model.compile(optimizer=optimizer, loss=loss, metrics=metrics)
 
 # Setup output folder
 directory = "./output/"+name+"/"
@@ -121,23 +119,27 @@ with open("./output/"+name+"/config.txt", "w") as txt:
     txt.write("opt = {0}\n".format(opt))
 
 # Set callbacks
-callbacks_list = []
+callbacks = []
 
 # save model weights if best
 savepath = directory + "weights/"
 if not os.path.exists(savepath):
     os.makedirs(savepath)
-modeldir = savepath + "epoch_{epoch:02d}-valloss_{val_loss:.2f}-valacc_{val_acc:.2f}.hdf5"
+modeldir = savepath + "epoch_{epoch:03d}-valloss_{val_loss:.2f}-valacc_{val_acc:.2f}.hdf5"
 checkpoint = ModelCheckpoint(modeldir, monitor='val_loss', save_weights_only=False, save_best_only=True, mode='min', verbose=1)
-callbacks_list.append(checkpoint)
+callbacks.append(checkpoint)
 
 # early stopping
 # early_stopping = EarlyStopping(monitor='val_loss', patience=5) # stop if no improvements after 5 epochs
 # callbacks_list.append(early_stopping)
 
+# learning rate decay on plateau
+# reduceLR = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=10, verbose=0, mode='auto', epsilon=0.0001, cooldown=0, min_lr=0)
+# callbacks.append(reduceLR)
+
 # custom tensorboard logging
 tensorboard= TrainValTensorBoard(log_dir=directory+"logs/", histogram_freq=0, write_graph=True, write_images=True) # custom TB writer object
-callbacks_list.append(tensorboard) # add tensorboard logging
+callbacks.append(tensorboard) # add tensorboard logging
 
 
 # Train model
@@ -147,8 +149,11 @@ hist = model.fit_generator(generator = trainGen,
                            validation_steps = len(partition["valid"])//batch_size,
                            class_weight = class_weights,
                            epochs = max_epochs,
-                           callbacks=callbacks_list)
+                           callbacks=callbacks)
 
+# Save final model
+finalsave = savepath + "epoch_{0:03d}".format(max_epochs) + "_final.hdf5"
+model.save(finalsave, include_optimizer=True, overwrite=True)
 
 # Dump history to disk
 with open("./output/"+name+"/history.pkl", 'wb') as f:
