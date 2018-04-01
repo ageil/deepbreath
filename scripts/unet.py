@@ -114,24 +114,23 @@ def tdist_unet(classification=False, timesteps=1, downsample=1, droprate=0.5):
     relu_42 = TimeDistributed(Activation("relu", name="ReLU_42"), name="TD_ReLU_42")(merge_41)
     # down_43 = TimeDistributed(AveragePooling3D(pool_size=relu_42._keras_shape[-3:], data_format="channels_first", name="down_43"),
     #                           name="TD_down_43")(relu_42)
-    flatten_44 = TimeDistributed(Flatten(name="flatten_44"), name="TD_flatten_44")(relu_42) # batch_ze x timesteps x features
+    flatten_44 = TimeDistributed(Flatten(name="flatten_44"), name="TD_flatten_44")(relu_42) # batch_size x timesteps x features
 
     if timesteps > 1:
         lstm_45 = Bidirectional(LSTM(64, return_sequences=True, name="lstm_45"), name="bidir_lstm_45")(flatten_44)
         drop_46 = Dropout(rate=droprate, seed=2, name="drop_46")(lstm_45)
         lstm_47 = Bidirectional(LSTM(32, return_sequences=True, name="lstm_47"), name="bidir_lstm_47")(drop_46)
         drop_48 = Dropout(rate=droprate, seed=2, name="drop_48")(lstm_47)
-        lstm_49 = LSTM(classes, activation="softmax", return_sequences=False, name="lstm_49")(drop_48) # 6 classes
-        output_50 = Reshape(target_shape=(classes, 1, 1, 1, 1), name="output_50")(lstm_49)
+        output_49 = LSTM(classes, activation="softmax", return_sequences=False, name="lstm_49")(drop_48) # batch_size x classes
 
-        model = Model(inputs=input_1, outputs=output_50)
+        model = Model(inputs=input_1, outputs=output_49)
     else:
         flatten_45 = Flatten(name="flatten_45")(flatten_44) # flatten temporal dimension
         dense_46 = Dense(units=128, activation="relu", kernel_initializer=glorot_normal(2), name="dense_45")(flatten_45)
         drop_47 = Dropout(rate=droprate, seed=2, name="drop_46")(dense_46)
         dense_48 = Dense(units=64, activation="relu", kernel_initializer=glorot_normal(2), name="dense_47")(drop_47)
         drop_49 = Dropout(rate=droprate, seed=2, name="drop_48")(dense_48)
-        output_50 = Dense(units=classes, activation="softmax", kernel_initializer=glorot_normal(2), name="dense_49")(drop_49)
+        output_50 = Dense(units=classes, activation="softmax", kernel_initializer=glorot_normal(2), name="dense_49")(drop_49) # batch_size x classes
 
         model = Model(inputs=input_1, outputs=output_50)
 
