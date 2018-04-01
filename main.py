@@ -19,14 +19,14 @@ from scripts.TBCallbacks import TrainValTensorBoard
 
 # Set hyperparameters
 name = sys.argv[1]
-classification = bool(sys.argv[2])
+classification = eval(sys.argv[2])
 timesteps = int(sys.argv[3])
 batch_size = int(sys.argv[4])
 learn_rate = float(sys.argv[5])
 max_epochs = int(sys.argv[6])
 downsample = int(sys.argv[7])
 droprate = float(sys.argv[8])
-# debug = bool(sys.argv[9])
+# debug = eval(sys.argv[9])
 
 # name = "debug"
 # classification = True
