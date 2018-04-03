@@ -26,7 +26,8 @@ learn_rate = float(sys.argv[5])
 max_epochs = int(sys.argv[6])
 downsample = int(sys.argv[7])
 droprate = float(sys.argv[8])
-debug = eval(sys.argv[9])
+reg = float(sys.argv[9])
+debug = eval(sys.argv[10])
 
 # name = "debug_cnn_cat"
 # classification = True
@@ -36,6 +37,7 @@ debug = eval(sys.argv[9])
 # max_epochs = 30
 # downsample = 4 # 1 = no downsampling, 2 = halve input dims etc.
 # droprate = 0.0 # fraction to drop
+# reg = 0.0 # L2 reg
 # debug = True
 
 if learn_rate > 0:
@@ -91,7 +93,7 @@ validGen = validGen.generate(labels, partition["valid"])
 
 # Create model
 # model = unet(downsample=downsample)
-model = tdist_unet(classification=classification, timesteps=timesteps, downsample=downsample, droprate=droprate)
+model = tdist_unet(classification=classification, timesteps=timesteps, downsample=downsample, droprate=droprate, reg=reg)
 model.compile(optimizer=optimizer, loss=loss, metrics=metrics)
 
 # Setup output folder
@@ -108,6 +110,7 @@ with open("./output/"+name+"/config.txt", "w") as txt:
     txt.write("max_epochs= {0}\n".format(max_epochs))
     txt.write("downsample = {0}\n".format(downsample))
     txt.write("droprate = {0}\n".format(droprate))
+    txt.write("reg = {0}\n".format(reg))
     txt.write("debug = {0}\n".format(debug))
     txt.write("loss = {0}\n".format(loss))
     txt.write("opt = {0}\n".format(opt))
