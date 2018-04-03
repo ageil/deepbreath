@@ -127,9 +127,9 @@ def tdist_unet(classification=False, timesteps=1, downsample=1, droprate=0.5, re
         model = Model(inputs=input_1, outputs=output_49)
     else:
         flatten_45 = Flatten(name="flatten_45")(flatten_44) # flatten temporal dimension
-        dense_46 = Dense(units=128, activation="relu", kernel_regularizer=l2(reg), kernel_initializer=glorot_normal(2), name="dense_45")(flatten_45)
+        dense_46 = Dense(units=32, activation="relu", kernel_regularizer=l2(reg), kernel_initializer=glorot_normal(2), name="dense_45")(flatten_45)
         drop_47 = Dropout(rate=droprate, seed=2, name="drop_46")(dense_46)
-        dense_48 = Dense(units=64, activation="relu", kernel_regularizer=l2(reg), kernel_initializer=glorot_normal(2), name="dense_47")(drop_47)
+        dense_48 = Dense(units=16, activation="relu", kernel_regularizer=l2(reg), kernel_initializer=glorot_normal(2), name="dense_47")(drop_47)
         drop_49 = Dropout(rate=droprate, seed=2, name="drop_48")(dense_48)
         output_50 = Dense(units=classes, activation="softmax", kernel_regularizer=l2(reg), kernel_initializer=glorot_normal(2), name="dense_49")(drop_49) # batch_size x classes
 
