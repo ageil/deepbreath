@@ -8,7 +8,7 @@ from keras.layers.pooling import MaxPooling3D
 from keras.initializers import glorot_normal
 
 
-def unet(downsample=1):
+def gapnet(downsample=1):
     assert downsample > 0, "input downsampling factor must be 1 (none) or larger"
 
     # block 1

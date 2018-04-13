@@ -37,7 +37,7 @@ class DataGenerator(Sequence):
         return X, y
 
     def __oversample_IDs(self):
-        """Get sequence of oversampled batches"""
+        """Get sequence of batches with minority class oversampling"""
         seq = []
 
         # get class labels
@@ -65,11 +65,6 @@ class DataGenerator(Sequence):
             np.random.shuffle(batch)
             seq += batch
 
-        sampled = set(seq)
-        full = set(self.IDs)
-        print("sampled:", sampled)
-        print("missing:", full.difference(sampled))
-
         return seq
 
     def on_epoch_end(self):
@@ -89,15 +84,14 @@ class DataGenerator(Sequence):
     def __load_batch(self, batch_IDs):
         """Load batch data"""
         X = np.empty((self.batch_size, self.timesteps, self.channels, *self.dims))
-        y = np.empty((self.batch_size, 1, 1, 1, 1, 1), dtype=float)
+        y = np.empty((self.batch_size, 1), dtype=float)
 
         for i, ID in enumerate(batch_IDs):
             path = './data/' + self.folder + "/vol_" + str(ID) + ".npy"
             X[i, :, :, :, :, :] = np.load(path)
-            y[i, 0, 0, 0, 0, 0] = self.labels[ID]
+            y[i, 0] = self.labels[ID]
 
         if self.classes > 1:
-            collapse_y = np.squeeze(y)
-            return X, to_categorical(collapse_y, num_classes=self.classes)
+            return X, to_categorical(y, num_classes=self.classes)
 
         return X, y
