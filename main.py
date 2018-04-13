@@ -12,7 +12,6 @@ from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
 
 # Custom
 from scripts.data_gen import DataGenerator
-# from scripts.unet_original import unet
 from scripts.gapnet import tdist_gapnet
 from scripts.TBCallbacks import TrainValTensorBoard
 
@@ -94,7 +93,6 @@ trainGen = DataGenerator(labels, partition, mode="train", oversample=True, **par
 validGen = DataGenerator(labels, partition, mode="valid", oversample=False, **params)
 
 # Create model
-# model = unet(downsample=downsample)
 model = tdist_gapnet(classification=classification, timesteps=timesteps, downsample=downsample, droprate=droprate, reg=reg)
 model.compile(optimizer=optimizer, loss=loss, metrics=metrics)
 
