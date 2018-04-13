@@ -1,65 +1,103 @@
-# Adapted from https://stanford.edu/~shervine/blog/keras-how-to-generate-data-on-the-fly.html
 import numpy as np
+from keras.utils import Sequence, to_categorical
 
-class DataGenerator(object):
-    def __init__(self, folder, classification=False, batch_size=16, timesteps=1, channels=1,
-                 dim_x=142, dim_y=322, dim_z=262, shuffle=True):
-        'Initialization'
-        self.mode = "single" if timesteps == 1 else "time"
-        self.folder = self.mode + "_" + folder
-        self.classification = classification
+class DataGenerator(Sequence):
+    def __init__(self, labels, partition, mode="train", oversample=False,
+                 classes=6, batch_size=5, timesteps=1, channels=1, dims=(142, 322, 262)):
+        """Initialization"""
+        self.mode = mode
+        self.folder = "single_" + self.mode if timesteps == 1 else "time_" + self.mode
+        self.IDs = partition[mode]
+        self.labels = labels
+        self.classes = classes
         self.timesteps = timesteps
-        self.channels = channels
-        self.dim_x = dim_x
-        self.dim_y = dim_y
-        self.dim_z = dim_z
         self.batch_size = batch_size
-        self.shuffle = shuffle
-        
-    def __get_order(self, IDs):
-        'Get order of indices'
-        
-        indices = np.arange(len(IDs))
-        if self.shuffle == True:
-            np.random.shuffle(indices)
-        
-        return indices
-    
-    def __onehot(self, labels, y):
-        'Encode labels to onehot format'
-        n_classes = len(np.unique(list(labels.values())))
-        onehot = np.array([[1 if y[i] == j else 0 for j in range(n_classes)]
-                           for i in range(y.shape[0])], dtype=float)
-        return onehot
-    
-    def __gen_batch(self, labels, list_IDs_temp):
-        'Generate sample of size batch_size'
-        X = np.empty((self.batch_size, self.timesteps, self.channels, 
-                      self.dim_x, self.dim_y, self.dim_z))
-        y = np.empty((self.batch_size, 1, 1, 1, 1, 1), dtype=float)
-        
-        for i, ID in enumerate(list_IDs_temp):
-            # store volume
-            path = './data/'+self.folder+"/vol_"+str(ID) +".npy"
-            X[i, :, :, :, :, :] = np.load(path)
-            y[i, 0, 0, 0, 0, 0] = labels[ID]
+        self.class_samples_per_batch = self.batch_size // 3  # 3 class buckets used for oversampling
+        self.channels = channels
+        self.dims = dims
+        self.shuffle = True if mode == "train" else False
+        self.oversample = oversample
+        self.on_epoch_end() # set self.ID_queue on init
 
-        if self.classification:
-            return X, self.__onehot(labels, y)
+
+    def __len__(self):
+        """Get number of batches per epoch"""
+        if self.mode == "train" and self.oversample:
+            batches_per_epoch = int(len(self.IDs_1) // self.class_samples_per_batch)
+        else:
+            batches_per_epoch = int(len(self.IDs) // self.batch_size)
+
+        return batches_per_epoch
+
+    def __getitem__(self, idx):
+        """Get loaded batch of IDs"""
+        batch_IDs = self.ID_queue[idx*self.batch_size : (idx+1)*self.batch_size]
+        X, y = self.__load_batch(batch_IDs)
+
         return X, y
-    
-    def generate(self, labels, IDs):
-        'Generate batches indefinitely'
-        while True:
-            indices = self.__get_order(IDs)
-            
-            imax = int(len(indices)/self.batch_size)
-            for i in range(imax):
-                # get list of IDs
-                list_IDs_temp = [IDs[k] for k 
-                                 in indices[i*self.batch_size : (i+1)*self.batch_size]]
-                
-                # generate data
-                X, y = self.__gen_batch(labels, list_IDs_temp)
-                
-                yield X, y
+
+    def __oversample_IDs(self):
+        """Get sequence of oversampled batches"""
+        seq = []
+
+        # get class labels
+        c_vals = sorted(np.unique(list(self.labels.values())))
+        c1, c2, c3to5 = c_vals[0], c_vals[1], tuple(c_vals[2:])
+
+        # get IDs for each class label
+        self.IDs_1 = np.array([ID for ID in self.IDs if self.labels[ID] == c1])
+        self.IDs_2 = np.array([ID for ID in self.IDs if self.labels[ID] == c2])
+        self.IDs_3to5 = np.array([ID for ID in self.IDs if self.labels[ID] in c3to5])
+
+        for i in range(self.__len__()):
+            batch = []
+
+            idx_slice = np.arange(i * self.class_samples_per_batch, (i + 1) * self.class_samples_per_batch)
+
+            sample_1 = self.IDs_1.take(idx_slice, mode='wrap')
+            sample_2 = self.IDs_2.take(idx_slice, mode='wrap')
+            sample_3to5 = self.IDs_3to5.take(idx_slice, mode='wrap')
+
+            batch += list(sample_1)
+            batch += list(sample_2)
+            batch += list(sample_3to5)
+
+            np.random.shuffle(batch)
+            seq += batch
+
+        sampled = set(seq)
+        full = set(self.IDs)
+        print("sampled:", sampled)
+        print("missing:", full.difference(sampled))
+
+        return seq
+
+    def on_epoch_end(self):
+        """Update ID queue on epoch end"""
+        self.ID_queue = []
+
+        if self.shuffle:
+            np.random.shuffle(self.IDs)
+
+        if self.mode == "train" and self.oversample:
+            # prepare sequence with oversampled minority classes
+            self.ID_queue += self.__oversample_IDs()
+        else:
+            # prepare sequence with every ID occurring exactly once
+            self.ID_queue += self.IDs
+
+    def __load_batch(self, batch_IDs):
+        """Load batch data"""
+        X = np.empty((self.batch_size, self.timesteps, self.channels, *self.dims))
+        y = np.empty((self.batch_size, 1, 1, 1, 1, 1), dtype=float)
+
+        for i, ID in enumerate(batch_IDs):
+            path = './data/' + self.folder + "/vol_" + str(ID) + ".npy"
+            X[i, :, :, :, :, :] = np.load(path)
+            y[i, 0, 0, 0, 0, 0] = self.labels[ID]
+
+        if self.classes > 1:
+            collapse_y = np.squeeze(y)
+            return X, to_categorical(collapse_y, num_classes=self.classes)
+
+        return X, y
