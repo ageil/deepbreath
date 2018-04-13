@@ -9,7 +9,7 @@ from keras.initializers import glorot_normal
 from keras.regularizers import l2
 
 
-def tdist_unet(classification=False, timesteps=1, downsample=1, droprate=0.5, reg=0.0):
+def tdist_gapnet(classification=False, timesteps=1, downsample=1, droprate=0.5, reg=0.0):
     assert timesteps > 0, "timesteps must be larger than 0"
     assert timesteps <= 5, "timesteps cannot exceed 5"
     assert downsample > 0, "input downsampling factor must be 1 (none) or larger"
@@ -21,10 +21,9 @@ def tdist_unet(classification=False, timesteps=1, downsample=1, droprate=0.5, re
     classes = 6 if classification else 1
 
     # block 1
-    input_1 = Input(shape=(timesteps, 1, 142, 322, 262), name="input_1")  # timesteps x channels x imgsize
-    # input_1 = Input(shape=(timesteps, 1, 108, 284, 228), name="input_1")  # timesteps x channels x imgsize # original dimensions
+    input = Input(shape=(timesteps, 1, 142, 322, 262), name="input_1")  # timesteps x channels x imgsize
     mpool = TimeDistributed(MaxPooling3D(pool_size=(downsample, downsample, downsample), data_format="channels_first", name="mpool3D"),
-                            name="TD_mpool3D")(input_1)
+                            name="TD_mpool3D")(input)
     conv_1 = TimeDistributed(Conv3D(filters=6, kernel_size=(1, 5, 5), data_format="channels_first", name="conv_1"),
                              name="TD_conv_1")(mpool)
     relu_2 = TimeDistributed(Activation('relu', name="ReLU_2"), name="TD_ReLU_2")(conv_1)
@@ -122,19 +121,17 @@ def tdist_unet(classification=False, timesteps=1, downsample=1, droprate=0.5, re
         drop_46 = Dropout(rate=droprate, seed=2, name="drop_46")(lstm_45)
         lstm_47 = Bidirectional(LSTM(32, return_sequences=True, name="lstm_47"), name="bidir_lstm_47")(drop_46)
         drop_48 = Dropout(rate=droprate, seed=2, name="drop_48")(lstm_47)
-        output_49 = LSTM(classes, activation="softmax", return_sequences=False, name="lstm_49")(drop_48) # batch_size x classes
-
-        model = Model(inputs=input_1, outputs=output_49)
+        output = LSTM(classes, activation="softmax", return_sequences=False, name="lstm_49")(drop_48) # batch_size x classes
+        # print(output._keras_shape)
     else:
         flatten_45 = Flatten(name="flatten_45")(flatten_44) # flatten temporal dimension
-        dense_46 = Dense(units=32, activation="relu", kernel_regularizer=l2(reg), kernel_initializer=glorot_normal(2), name="dense_45")(flatten_45)
-        drop_47 = Dropout(rate=droprate, seed=2, name="drop_46")(dense_46)
-        dense_48 = Dense(units=16, activation="relu", kernel_regularizer=l2(reg), kernel_initializer=glorot_normal(2), name="dense_47")(drop_47)
-        drop_49 = Dropout(rate=droprate, seed=2, name="drop_48")(dense_48)
-        output_50 = Dense(units=classes, activation="softmax", kernel_regularizer=l2(reg), kernel_initializer=glorot_normal(2), name="dense_49")(drop_49) # batch_size x classes
-
-        model = Model(inputs=input_1, outputs=output_50)
+        dense_46 = Dense(units=32, activation="relu", kernel_regularizer=l2(reg), kernel_initializer=glorot_normal(2), name="dense_46")(flatten_45)
+        drop_47 = Dropout(rate=droprate, seed=2, name="drop_47")(dense_46)
+        dense_48 = Dense(units=16, activation="relu", kernel_regularizer=l2(reg), kernel_initializer=glorot_normal(2), name="dense_48")(drop_47)
+        drop_49 = Dropout(rate=droprate, seed=2, name="drop_49")(dense_48)
+        output = Dense(units=classes, activation="softmax", kernel_regularizer=l2(reg), kernel_initializer=glorot_normal(2), name="dense_50")(drop_49) # batch_size x classes
+        print(output._keras_shape)
 
     # output_44 = TimeDistributed(Conv3D(filters=1, kernel_size=(1, 1, 1), data_format="channels_first", name="conv_44"), name="TD_conv_44")(down_43)
-    # model = Model(inputs=input_1, outputs=output_44)
+    model = Model(inputs=input, outputs=output)
     return model

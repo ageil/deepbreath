@@ -13,7 +13,7 @@ from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
 # Custom
 from scripts.data_gen import DataGenerator
 # from scripts.unet_original import unet
-from scripts.unet import tdist_unet
+from scripts.gapnet import tdist_gapnet
 from scripts.TBCallbacks import TrainValTensorBoard
 
 
@@ -29,16 +29,26 @@ droprate = float(sys.argv[8])
 reg = float(sys.argv[9])
 debug = eval(sys.argv[10])
 
-# name = "debug"
-# classification = True
+
+# name = 'test'
+# classification = False
 # timesteps = 1
-# batch_size = 1
+# batch_size = 5
 # learn_rate = 1e-3
 # max_epochs = 30
-# downsample = 4 # 1 = no downsampling, 2 = halve input dims etc.
-# droprate = 0.0 # fraction to drop
-# reg = 0.0 # L2 reg
+# downsample = 4
+# droprate = 0
+# reg = 0
 # debug = True
+
+
+params = {
+    'classes': 6 if classification else 1,
+    'timesteps': timesteps,
+    'batch_size': batch_size,
+    'channels': 1,
+    'dims': (142, 322, 262),
+}
 
 if learn_rate > 0:
     optimizer = Adam(lr=learn_rate)
@@ -63,7 +73,7 @@ labels = target.set_index("StId").to_dict()["ERU.M2"]
 # Rescale labels
 if classification:
     # combine 0+1 as 0 = no emph in scan, 1 = no emph in region
-    label_converter = {0: 0, 1: 0, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6}
+    label_converter = {0: 1, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6}
     loss = "categorical_crossentropy"
     metrics = ['acc', 'mae', 'mse']
 else:
@@ -82,18 +92,12 @@ class_weights = class_weight.compute_class_weight(class_weight='balanced',
                                                   y=train_labels)
 
 # Create data generators
-trainGen = DataGenerator("train", classification=classification, batch_size=batch_size,
-                         timesteps=timesteps, channels=1, dim_x=142, dim_y=322, dim_z=262, shuffle=True)
-validGen = DataGenerator("valid", classification=classification, batch_size=batch_size,
-                         timesteps=timesteps, channels=1, dim_x=142, dim_y=322, dim_z=262, shuffle=False)
-
-trainGen = trainGen.generate(labels, partition["train"])
-validGen = validGen.generate(labels, partition["valid"])
-
+trainGen = DataGenerator(labels, partition, mode="train", oversample=True, **params)
+validGen = DataGenerator(labels, partition, mode="valid", oversample=False, **params)
 
 # Create model
 # model = unet(downsample=downsample)
-model = tdist_unet(classification=classification, timesteps=timesteps, downsample=downsample, droprate=droprate, reg=reg)
+model = tdist_gapnet(classification=classification, timesteps=timesteps, downsample=downsample, droprate=droprate, reg=reg)
 model.compile(optimizer=optimizer, loss=loss, metrics=metrics)
 
 # Setup output folder
@@ -141,12 +145,12 @@ callbacks.append(tensorboard) # add tensorboard logging
 
 # Train model
 hist = model.fit_generator(generator = trainGen,
-                           steps_per_epoch = len(partition["train"])//batch_size,
                            validation_data = validGen,
-                           validation_steps = len(partition["valid"])//batch_size,
                            class_weight = class_weights,
                            epochs = max_epochs,
-                           callbacks=callbacks)
+                           callbacks=callbacks,
+                           use_multiprocessing=True,
+                           workers=5)
 
 # Save final model
 finalsave = savepath + "epoch_{0:03d}".format(max_epochs) + "_final.hdf5"
