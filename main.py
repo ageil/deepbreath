@@ -29,7 +29,6 @@ droprate = float(sys.argv[8])
 reg = float(sys.argv[9])
 debug = eval(sys.argv[10])
 
-
 # name = 'test'
 # classification = False
 # timesteps = 1
@@ -40,7 +39,6 @@ debug = eval(sys.argv[10])
 # droprate = 0
 # reg = 0
 # debug = True
-
 
 params = {
     'classes': 6 if classification else 1,
