@@ -130,7 +130,7 @@ def tdist_gapnet(classification=False, timesteps=1, downsample=1, droprate=0.5, 
         dense_48 = Dense(units=16, activation="relu", kernel_regularizer=l2(reg), kernel_initializer=glorot_normal(2), name="dense_48")(drop_47)
         drop_49 = Dropout(rate=droprate, seed=2, name="drop_49")(dense_48)
         output = Dense(units=classes, activation="softmax", kernel_regularizer=l2(reg), kernel_initializer=glorot_normal(2), name="dense_50")(drop_49) # batch_size x classes
-        print(output._keras_shape)
+        # print(output._keras_shape)
 
     # output_44 = TimeDistributed(Conv3D(filters=1, kernel_size=(1, 1, 1), data_format="channels_first", name="conv_44"), name="TD_conv_44")(down_43)
     model = Model(inputs=input, outputs=output)
