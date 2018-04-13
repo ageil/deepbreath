@@ -8,7 +8,7 @@ from sklearn.utils import class_weight
 
 # Keras
 from keras.optimizers import Adam, Nadam
-from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
+from keras.callbacks import ModelCheckpoint
 
 # Custom
 from scripts.data_gen import DataGenerator
@@ -125,14 +125,6 @@ if not os.path.exists(savepath):
 modeldir = savepath + "epoch_{epoch:03d}-valloss_{val_loss:.2f}-valacc_{val_acc:.2f}.hdf5"
 checkpoint = ModelCheckpoint(modeldir, monitor='val_loss', save_weights_only=False, save_best_only=True, mode='min', verbose=1)
 callbacks.append(checkpoint)
-
-# early stopping
-# early_stopping = EarlyStopping(monitor='val_loss', patience=5) # stop if no improvements after 5 epochs
-# callbacks_list.append(early_stopping)
-
-# learning rate decay on plateau
-# reduceLR = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=10, verbose=0, mode='auto', epsilon=0.0001, cooldown=0, min_lr=0)
-# callbacks.append(reduceLR)
 
 # custom tensorboard logging
 tensorboard= TrainValTensorBoard(log_dir=directory+"logs/", histogram_freq=0, write_graph=True, write_images=True) # custom TB writer object
