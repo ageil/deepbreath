@@ -70,7 +70,7 @@ labels = target.set_index("StId").to_dict()["ERU.M2"]
 # Rescale labels
 if classification:
     # combine 0+1 as 0 = no emph in scan, 1 = no emph in region
-    label_converter = {0: 1, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6}
+    label_converter = {0: 0, 1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5}
     loss = "categorical_crossentropy"
     metrics = ['acc', 'mae', 'mse']
 else:

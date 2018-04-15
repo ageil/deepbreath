@@ -9,7 +9,7 @@ class DataGenerator(Sequence):
         self.folder = "single_" + self.mode if timesteps == 1 else "time_" + self.mode
         self.IDs = partition[mode]
         self.labels = labels
-        self.classes = classes
+        self.classes = classes # 1 if regression
         self.timesteps = timesteps
         self.batch_size = batch_size
         self.class_samples_per_batch = self.batch_size // 3  # 3 class buckets used for oversampling
