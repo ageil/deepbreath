@@ -26,7 +26,8 @@ max_epochs = int(sys.argv[6])
 downsample = int(sys.argv[7])
 droprate = float(sys.argv[8])
 reg = float(sys.argv[9])
-debug = eval(sys.argv[10])
+nsamples = int(sys.argv[10]) # up to 779 training samples
+debug = eval(sys.argv[11])
 
 # name = 'test'
 # classification = False
@@ -37,6 +38,7 @@ debug = eval(sys.argv[10])
 # downsample = 4
 # droprate = 0
 # reg = 0
+# nsamples = 20 # up to 779 training samples
 # debug = True
 
 params = {
@@ -59,9 +61,10 @@ else:
 with open("./data/partition.pkl", 'rb') as f:
     partition = pickle.load(f)
 
-if debug:
-    partition["train"] = partition["train"][:20]
-    partition["valid"] = partition["valid"][:5]
+# if debug:
+#     partition["train"] = partition["train"][:20]
+#     partition["valid"] = partition["valid"][:5]
+partition["train"] = partition["train"][:nsamples]
 
 # Load labels
 target = pd.read_csv("./data/ERU_Scores_Ids_5-Scans_Validity-0_VisuallyScored.csv")
@@ -111,7 +114,7 @@ with open("./output/"+name+"/config.txt", "w") as txt:
     txt.write("downsample = {0}\n".format(downsample))
     txt.write("droprate = {0}\n".format(droprate))
     txt.write("reg = {0}\n".format(reg))
-    txt.write("debug = {0}\n".format(debug))
+    txt.write("nsamples = {0}\n".format(nsamples))
     txt.write("loss = {0}\n".format(loss))
     txt.write("opt = {0}\n".format(opt))
 
