@@ -27,7 +27,7 @@ downsample = int(sys.argv[7])
 droprate = float(sys.argv[8])
 reg = float(sys.argv[9])
 nsamples = int(sys.argv[10]) # up to 779 training samples
-debug = eval(sys.argv[11])
+# debug = eval(sys.argv[11]) # 20 training, 5 val
 
 # name = 'test'
 # classification = False
@@ -56,14 +56,9 @@ else:
     optimizer = Nadam()
     opt = "Nadam"
 
-
 # Load data partitions
 with open("./data/partition.pkl", 'rb') as f:
     partition = pickle.load(f)
-
-# if debug:
-#     partition["train"] = partition["train"][:20]
-#     partition["valid"] = partition["valid"][:5]
 partition["train"] = partition["train"][:nsamples]
 
 # Load labels
