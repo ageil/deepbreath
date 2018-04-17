@@ -27,4 +27,4 @@ Note that setting the learning rate to 0 will change the optimizer from Adam to 
 | 5     | 0.79% | 0.77%    | 0.9%       | 0.72%  | 0.0%  |
 | 6     | 0.22% | 0.26%    | 0.0%       | 0.36%  | 0.0%  |
 
-\* Debug mode was previously used to test the model's capability for overfitting on the first 20 training samples (5 validation samples).
+\* Debug mode was previously used to test the model's abilities to overfit on the first 20 training samples (5 validation samples).
