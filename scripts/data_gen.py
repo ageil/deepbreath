@@ -1,8 +1,9 @@
 import numpy as np
 from keras.utils import Sequence, to_categorical
+from scipy.ndimage.interpolation import shift
 
 class DataGenerator(Sequence):
-    def __init__(self, labels, partition, mode="train", oversample=False,
+    def __init__(self, labels, partition, mode="train", oversample=False, flip=False, shift=False,
                  classes=6, batch_size=5, timesteps=1, channels=1, dims=(142, 322, 262)):
         """Initialization"""
         self.mode = mode
@@ -17,6 +18,8 @@ class DataGenerator(Sequence):
         self.dims = dims
         self.shuffle = True if mode == "train" else False
         self.oversample = oversample
+        self.flip = flip
+        self.shift = shift
         self.on_epoch_end() # set self.ID_queue on init
 
 
@@ -81,6 +84,26 @@ class DataGenerator(Sequence):
             # prepare sequence with every ID occurring exactly once
             self.ID_queue += self.IDs
 
+    def __random_flip(self, array):
+        flip_x, flip_y, flip_z = np.random.binomial(1, 0.5, size=3).astype(bool)
+
+        if flip_x:
+            array = np.flip(array, axis=2)
+        if flip_y:
+            array = np.flip(array, axis=3)
+        if flip_z:
+            array = np.flip(array, axis=4)
+
+        return array
+
+    def __random_shift(self, array):
+        shift_x, shift_y, shift_z = np.random.randint(-11, 11, 3)
+
+        # shift along img dims (0=time dim, 1=color dim)
+        array = shift(array, (0, 0, shift_z, shift_y, shift_z), cval=0)
+
+        return array
+
     def __load_batch(self, batch_IDs):
         """Load batch data"""
         X = np.empty((self.batch_size, self.timesteps, self.channels, *self.dims))
@@ -88,7 +111,15 @@ class DataGenerator(Sequence):
 
         for i, ID in enumerate(batch_IDs):
             path = './data/' + self.folder + "/vol_" + str(ID) + ".npy"
-            X[i, :, :, :, :, :] = np.load(path)
+            img = np.load(path)
+
+            # preprocess image
+            if self.flip:
+                img = self.__random_flip(img)
+            if self.shift:
+                img = self.__random_shift(img)
+
+            X[i, :, :, :, :, :] = img
             y[i, 0] = self.labels[ID]
 
         if self.classes > 1:

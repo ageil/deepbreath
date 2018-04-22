@@ -87,7 +87,7 @@ class_weights = class_weight.compute_class_weight(class_weight='balanced',
                                                   y=train_labels)
 
 # Create data generators
-trainGen = DataGenerator(labels, partition, mode="train", oversample=True, **params)
+trainGen = DataGenerator(labels, partition, mode="train", oversample=True, flip=True, shift=True, **params)
 validGen = DataGenerator(labels, partition, mode="valid", oversample=False, **params)
 
 # Create model
