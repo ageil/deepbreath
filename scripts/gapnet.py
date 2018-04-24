@@ -9,14 +9,13 @@ from keras.initializers import glorot_normal
 from keras.regularizers import l2
 
 
-def tdist_gapnet(classification=False, timesteps=1, downsample=1, droprate=0.5, reg=0.0):
+def tdist_gapnet(classification=False, timesteps=1, downsample=1, droprate=0.0, reg=0.0):
     assert timesteps > 0, "timesteps must be larger than 0"
     assert timesteps <= 5, "timesteps cannot exceed 5"
     assert downsample > 0, "input downsampling factor must be 1 (none) or larger"
-    if timesteps > 0:
-        assert droprate is not None, "dropout rate needs to be set for RNN"
-        assert droprate >= 0, "dropout rate cannot be negative"
-        assert droprate <= 1, "dropout rate cannot exceed 1"
+    assert droprate is not None, "dropout rate needs to be set for RNN"
+    assert droprate >= 0, "dropout rate cannot be negative"
+    assert droprate <= 1, "dropout rate cannot exceed 1"
 
     classes = 6 if classification else 1
 
@@ -114,7 +113,9 @@ def tdist_gapnet(classification=False, timesteps=1, downsample=1, droprate=0.5, 
     relu_42 = TimeDistributed(Activation("relu", name="ReLU_42"), name="TD_ReLU_42")(merge_41)
     down_43 = TimeDistributed(AveragePooling3D(pool_size=relu_42._keras_shape[-3:], data_format="channels_first", name="down_43"),
                               name="TD_down_43")(relu_42)
+    # print("down_43:", down_43._keras_shape)
     flatten_44 = TimeDistributed(Flatten(name="flatten_44"), name="TD_flatten_44")(down_43) # batch_size x timesteps x features
+    # print("flatten_44:", flatten_44._keras_shape)
 
     if timesteps > 1:
         lstm_45 = Bidirectional(LSTM(64, return_sequences=True, name="lstm_45"), name="bidir_lstm_45")(flatten_44)
@@ -124,13 +125,21 @@ def tdist_gapnet(classification=False, timesteps=1, downsample=1, droprate=0.5, 
         output = LSTM(classes, activation="softmax", return_sequences=False, name="lstm_49")(drop_48) # batch_size x classes
         # print(output._keras_shape)
     else:
-        flatten_45 = Flatten(name="flatten_45")(flatten_44) # flatten temporal dimension
-        dense_46 = Dense(units=32, activation="relu", kernel_regularizer=l2(reg), kernel_initializer=glorot_normal(2), name="dense_46")(flatten_45)
-        drop_47 = Dropout(rate=droprate, seed=2, name="drop_47")(dense_46)
-        dense_48 = Dense(units=16, activation="relu", kernel_regularizer=l2(reg), kernel_initializer=glorot_normal(2), name="dense_48")(drop_47)
-        drop_49 = Dropout(rate=droprate, seed=2, name="drop_49")(dense_48)
-        output = Dense(units=classes, activation="softmax", kernel_regularizer=l2(reg), kernel_initializer=glorot_normal(2), name="dense_50")(drop_49) # batch_size x classes
-        # print(output._keras_shape)
+        if classification:
+            flatten_45 = Flatten(name="flatten_45")(flatten_44)  # flatten temporal dimension
+            # print("flatten_45:", flatten_45._keras_shape)
+            dense_46 = Dense(units=32, activation="relu", kernel_regularizer=l2(reg), kernel_initializer=glorot_normal(2), name="dense_46")(flatten_45)
+            drop_47 = Dropout(rate=droprate, seed=2, name="drop_47")(dense_46)
+            dense_48 = Dense(units=16, activation="relu", kernel_regularizer=l2(reg), kernel_initializer=glorot_normal(2), name="dense_48")(drop_47)
+            drop_49 = Dropout(rate=droprate, seed=2, name="drop_49")(dense_48)
+            output = Dense(units=classes, activation="softmax", kernel_regularizer=l2(reg), kernel_initializer=glorot_normal(2), name="dense_50")(drop_49) # batch_size x classes
+        else:
+            reshape_45 = Reshape((flatten_44._keras_shape[-1], 1, 1, 1))(flatten_44)
+            # print("reshape:", reshape_45._keras_shape)
+            conv_46 = Conv3D(filters=1, kernel_size=(1, 1, 1), data_format="channels_first", name="conv_46")(reshape_45)
+            # print("conv_46:", conv_46._keras_shape)
+            output = Flatten(name="flatten_47")(conv_46)
+        # print("output:", output._keras_shape)
 
     # output_44 = TimeDistributed(Conv3D(filters=1, kernel_size=(1, 1, 1), data_format="channels_first", name="conv_44"), name="TD_conv_44")(down_43)
     model = Model(inputs=input, outputs=output)
