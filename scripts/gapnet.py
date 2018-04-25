@@ -134,7 +134,7 @@ def tdist_gapnet(classification=False, timesteps=1, downsample=1, droprate=0.0, 
             drop_49 = Dropout(rate=droprate, seed=2, name="drop_49")(dense_48)
             output = Dense(units=classes, activation="softmax", kernel_regularizer=l2(reg), kernel_initializer=glorot_normal(2), name="dense_50")(drop_49) # batch_size x classes
         else:
-            reshape_45 = Reshape((flatten_44._keras_shape[-1], 1, 1, 1))(flatten_44)
+            reshape_45 = Reshape((flatten_44._keras_shape[-1], 1, 1, 1))(down_43)
             # print("reshape:", reshape_45._keras_shape)
             conv_46 = Conv3D(filters=1, kernel_size=(1, 1, 1), data_format="channels_first", name="conv_46")(reshape_45)
             # print("conv_46:", conv_46._keras_shape)
