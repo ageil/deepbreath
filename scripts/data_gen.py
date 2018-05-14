@@ -100,7 +100,7 @@ class DataGenerator(Sequence):
         shift_x, shift_y, shift_z = np.random.randint(-11, 11, 3)
 
         # shift along img dims (0=time dim, 1=color dim)
-        array = shift(array, (0, 0, shift_z, shift_y, shift_z), cval=0)
+        array = shift(array, (0, 0, shift_z, shift_y, shift_z), cval=-800) # cval = -800 (background val)
 
         return array
 
