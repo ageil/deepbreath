@@ -82,8 +82,11 @@ def gapnet(downsample=1):
 
     # block 8
     relu_42 = Activation("relu", name="ReLU_42")(merge_41)
+    print("relu_42:", relu_42._keras_shape)
     down_43 = AveragePooling3D(pool_size=relu_42._keras_shape[-3:], data_format="channels_first", name="down_43")(relu_42)
+    print("down_43:", down_43._keras_shape)
     output_44 = Conv3D(filters=1, kernel_size=(1, 1, 1), data_format="channels_first", name="conv_44")(down_43)
+    print("output_44:", output_44._keras_shape)
 
     model = Model(inputs=input_1, outputs=output_44)
 
