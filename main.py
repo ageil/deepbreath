@@ -17,36 +17,35 @@ from scripts.TBCallbacks import TrainValTensorBoard
 
 
 # Set hyperparameters
-name = sys.argv[1]
-classification = eval(sys.argv[2])
-timesteps = int(sys.argv[3])
-batch_size = int(sys.argv[4])
-learn_rate = float(sys.argv[5])
-max_epochs = int(sys.argv[6])
-downsample = int(sys.argv[7])
-droprate = float(sys.argv[8])
-reg = float(sys.argv[9])
-nsamples = int(sys.argv[10]) # up to 779 training samples
+# name = sys.argv[1]
+# classification = eval(sys.argv[2])
+# timesteps = int(sys.argv[3])
+# batch_size = int(sys.argv[4])
+# learn_rate = float(sys.argv[5])
+# max_epochs = int(sys.argv[6])
+# downsample = int(sys.argv[7])
+# droprate = float(sys.argv[8])
+# reg = float(sys.argv[9])
+# nsamples = int(sys.argv[10]) # up to 779 training samples
 # debug = eval(sys.argv[11]) # 20 training, 5 val
 
-# name = 'test'
-# classification = False
-# timesteps = 1
-# batch_size = 5
-# learn_rate = 1e-3
-# max_epochs = 30
-# downsample = 4
-# droprate = 0
-# reg = 0
-# nsamples = 20 # up to 779 training samples
-# debug = True
+name = 'test'
+classification = False
+timesteps = 1
+batch_size = 5
+learn_rate = 1e-3
+max_epochs = 30
+downsample = 1
+droprate = 0
+reg = 0
+nsamples = 20 # up to 779 training samples
 
 params = {
     'classes': 6 if classification else 1,
     'timesteps': timesteps,
     'batch_size': batch_size,
     'channels': 1,
-    'dims': (142, 322, 262),
+    'dims': (50, 146, 118),
 }
 
 if learn_rate > 0:

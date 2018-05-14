@@ -7,6 +7,7 @@ from keras.layers.wrappers import TimeDistributed, Bidirectional
 from keras.layers.pooling import MaxPooling3D
 from keras.initializers import glorot_normal
 from keras.regularizers import l2
+from keras.optimizers import Adam
 
 
 def tdist_gapnet(classification=False, timesteps=1, downsample=1, droprate=0.0, reg=0.0):
@@ -20,7 +21,8 @@ def tdist_gapnet(classification=False, timesteps=1, downsample=1, droprate=0.0, 
     classes = 6 if classification else 1
 
     # block 1
-    input = Input(shape=(timesteps, 1, 142, 322, 262), name="input_1")  # timesteps x channels x imgsize
+    # input = Input(shape=(timesteps, 1, 142, 322, 262), name="input_1")  # timesteps x channels x imgsize
+    input = Input(shape=(timesteps, 1, 50, 146, 118), name="input_1")  # timesteps x channels x imgsize
     mpool = TimeDistributed(MaxPooling3D(pool_size=(downsample, downsample, downsample), data_format="channels_first", name="mpool3D"),
                             name="TD_mpool3D")(input)
     conv_1 = TimeDistributed(Conv3D(filters=6, kernel_size=(1, 5, 5), data_format="channels_first", name="conv_1"),
@@ -144,3 +146,7 @@ def tdist_gapnet(classification=False, timesteps=1, downsample=1, droprate=0.0, 
     # output_44 = TimeDistributed(Conv3D(filters=1, kernel_size=(1, 1, 1), data_format="channels_first", name="conv_44"), name="TD_conv_44")(down_43)
     model = Model(inputs=input, outputs=output)
     return model
+
+model = tdist_gapnet(classification=False, timesteps=1, downsample=1, droprate=0.0, reg=0.0)
+model.compile(optimizer = Adam(lr=1e-3),loss = 'mae')
+print(model.summary(line_length=120))
