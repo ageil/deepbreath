@@ -110,7 +110,8 @@ class DataGenerator(Sequence):
         y = np.empty((self.batch_size, 1), dtype=float)
 
         for i, ID in enumerate(batch_IDs):
-            path = './data/cropped/' + self.folder + "/vol_" + str(ID) + ".npy"
+            prefix = '../data/full/' if self.dims == (142, 322, 262) else '../data/crop/'
+            path = prefix + self.folder + "/vol_" + str(ID) + ".npy"
             img = np.load(path)
 
             # preprocess image
