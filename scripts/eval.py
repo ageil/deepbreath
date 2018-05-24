@@ -11,11 +11,10 @@ from glob import glob
 
 
 name = "cnn_reg9"
-cropped = False
 classification = False
 timesteps = 1
 batch_size = 1
-mode = "valid"
+mode = "valid" # partition to eval on
 
 
 # partitions
@@ -29,16 +28,16 @@ labels = target.set_index("StId").to_dict()["ERU.M2"]
 label_converter = {0: 0, 1: 0, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6} if classification else {0: 0.0, 1: 0.0, 2: 1.0, 3: 2.0, 4: 3.0, 5: 4.0, 6: 5.0}
 labels = {key: label_converter[val] for key, val in labels.items()}
 
+# model
+path = sorted(glob("../output/"+name+"/weights/*.hdf5"))[-2]
+model = load_model(path)
+modelname = path.split("/")[-1].split(".hdf5")[0]
+print("Loaded model:", modelname)
+
 # data generator
-dims = (142, 322, 262) if cropped else (50, 146, 118)
+dims = tuple([dim for dim in model.input_shape[3:]])
 gen = DataGenerator(labels, partition, mode=mode, oversample=False,
                     classes=1, batch_size=batch_size, timesteps=timesteps, dims=dims)
-
-# model
-path = sorted(glob("../output/"+name+"/weights/*.hdf5"))[-1]
-print(path)
-
-model = load_model(path)
 
 # predict
 preds_int = np.empty((gen.__len__(), 2), dtype=int)
@@ -105,16 +104,16 @@ directory = "../output/" + name + "/predictions/"
 if not os.path.exists(directory):
     os.makedirs(directory)
 
-modelname = path.split("/")[-1].split(".hdf5")[0]
 savepath = directory + "/" + modelname + ".csv"
 df.to_csv(savepath, index=False)
 
 with open(directory + "/" + modelname + ".txt", "w") as txt:
     txt.write("{0}\n\n".format(modelname))
+    txt.write("Overall\n")
     txt.write("hit  = {0}\n".format(round(hit, 2)))
     txt.write("miss = {0}\n".format(round(miss,2)))
     txt.write("acc  = {0}\n\n".format(round(acc,2)))
-    txt.write("0 vs rest")
+    txt.write("0 vs rest\n")
     txt.write("hit  = {0}\n".format(round(binary_hit,2)))
     txt.write("miss = {0}\n".format(round(binary_miss,2)))
     txt.write("acc  = {0}\n\n".format(round(binary_acc,2)))
@@ -139,13 +138,14 @@ with open(directory + "/" + modelname + ".txt", "w") as txt:
     txt.write("miss = {0}\n".format(round(binary4_miss,2)))
     txt.write("acc  = {0}\n\n".format(round(binary4_acc,2)))
 
+# print summary
 print(name)
 print("Overall")
 print("Correct preds:", hit)
 print("Incorrect preds:", miss)
 print("Accuracy:", acc)
 print()
-print("0 only")
+print("0 vs rest")
 print("Correct preds:", binary_hit)
 print("Incorrect preds:", binary_miss)
 print("Accuracy:", binary_acc)
