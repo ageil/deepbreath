@@ -124,7 +124,10 @@ def tdist_gapnet(classification=False, timesteps=1, downsample=1, droprate=0.0, 
         drop_46 = Dropout(rate=droprate, seed=2, name="drop_46")(lstm_45)
         lstm_47 = Bidirectional(LSTM(32, return_sequences=True, name="lstm_47"), name="bidir_lstm_47")(drop_46)
         drop_48 = Dropout(rate=droprate, seed=2, name="drop_48")(lstm_47)
-        output = LSTM(classes, activation="softmax", return_sequences=False, name="lstm_49")(drop_48) # batch_size x classes
+        if classification:
+            output = LSTM(classes, activation="softmax", return_sequences=False, name="lstm_49")(drop_48) # batch_size x classes
+        else:
+            output = LSTM(classes, activation="linear", return_sequences=False, name="lstm_49")(drop_48)  # batch_size x classes
         # print(output._keras_shape)
     else:
         if classification:
