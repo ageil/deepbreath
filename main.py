@@ -5,10 +5,12 @@ import os
 import sys
 import pickle
 from sklearn.utils import class_weight
+from glob import glob
 
 # Keras
 from keras.optimizers import Adam, Nadam
 from keras.callbacks import ModelCheckpoint
+from keras.models import load_model
 
 # Custom
 from scripts.data_gen import DataGenerator
@@ -27,25 +29,27 @@ downsample = int(sys.argv[7])
 droprate = float(sys.argv[8])
 reg = float(sys.argv[9])
 nsamples = int(sys.argv[10]) # up to 779 training samples
+cropped = eval(sys.argv[11])
 # debug = eval(sys.argv[11]) # 20 training, 5 val
 
 # name = 'test'
 # classification = False
 # timesteps = 1
-# batch_size = 5
+# batch_size = 1
 # learn_rate = 1e-3
 # max_epochs = 30
 # downsample = 1
 # droprate = 0
 # reg = 0
 # nsamples = 20 # up to 779 training samples
+# cropped = False
 
 params = {
     'classes': 6 if classification else 1,
     'timesteps': timesteps,
     'batch_size': batch_size,
     'channels': 1,
-    'dims': (50, 146, 118),
+    'dims': (50, 146, 118) if cropped else (142, 322, 262),
 }
 
 if learn_rate > 0:
@@ -91,27 +95,35 @@ trainGen = DataGenerator(labels, partition, mode="train", oversample=True, flip=
 validGen = DataGenerator(labels, partition, mode="valid", oversample=False, **params)
 
 # Create model
-model = tdist_gapnet(classification=classification, timesteps=timesteps, downsample=downsample, droprate=droprate, reg=reg)
-model.compile(optimizer=optimizer, loss=loss, metrics=metrics)
+paths = sorted(glob("./output/"+name+"/weights/*.hdf5"))
+if len(paths) > 0:
+    path = paths[-1]
+    model = load_model(path)
+    print("Loaded model:", path)
+else:
+    model = tdist_gapnet(classification=classification, timesteps=timesteps, cropped=cropped, downsample=downsample, droprate=droprate, reg=reg)
+    model.compile(optimizer=optimizer, loss=loss, metrics=metrics)
+    print("Created new model:", name)
 
 # Setup output folder
 directory = "./output/"+name+"/"
 if not os.path.exists(directory):
     os.makedirs(directory)
 
-with open("./output/"+name+"/config.txt", "w") as txt:
-    txt.write("name = {0}\n".format(name))
-    txt.write("classification = {0}\n".format(classification))
-    txt.write("timesteps = {0}\n".format(timesteps))
-    txt.write("batch_size = {0}\n".format(batch_size))
-    txt.write("learn_rate = {0}\n".format(learn_rate))
-    txt.write("max_epochs= {0}\n".format(max_epochs))
-    txt.write("downsample = {0}\n".format(downsample))
-    txt.write("droprate = {0}\n".format(droprate))
-    txt.write("reg = {0}\n".format(reg))
-    txt.write("nsamples = {0}\n".format(nsamples))
-    txt.write("loss = {0}\n".format(loss))
-    txt.write("opt = {0}\n".format(opt))
+    with open("./output/"+name+"/config.txt", "w") as txt:
+        txt.write("name = {0}\n".format(name))
+        txt.write("classification = {0}\n".format(classification))
+        txt.write("timesteps = {0}\n".format(timesteps))
+        txt.write("batch_size = {0}\n".format(batch_size))
+        txt.write("learn_rate = {0}\n".format(learn_rate))
+        txt.write("max_epochs= {0}\n".format(max_epochs))
+        txt.write("downsample = {0}\n".format(downsample))
+        txt.write("droprate = {0}\n".format(droprate))
+        txt.write("reg = {0}\n".format(reg))
+        txt.write("nsamples = {0}\n".format(nsamples))
+        txt.write("cropped = {0}\n".format(cropped))
+        txt.write("loss = {0}\n".format(loss))
+        txt.write("opt = {0}\n".format(opt))
 
 # Set callbacks
 callbacks = []
