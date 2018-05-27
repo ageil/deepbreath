@@ -10,7 +10,7 @@ from keras.regularizers import l2
 from keras.optimizers import Adam
 
 
-def tdist_gapnet(classification=False, timesteps=1, downsample=1, droprate=0.0, reg=0.0):
+def tdist_gapnet(classification=False, timesteps=1, cropped=False, downsample=1, droprate=0.0, reg=0.0):
     assert timesteps > 0, "timesteps must be larger than 0"
     assert timesteps <= 5, "timesteps cannot exceed 5"
     assert downsample > 0, "input downsampling factor must be 1 (none) or larger"
@@ -19,10 +19,10 @@ def tdist_gapnet(classification=False, timesteps=1, downsample=1, droprate=0.0, 
     assert droprate <= 1, "dropout rate cannot exceed 1"
 
     classes = 6 if classification else 1
+    shape = (timesteps, 1, 50, 146, 118) if cropped else (timesteps, 1, 142, 322, 262)
 
     # block 1
-    # input = Input(shape=(timesteps, 1, 142, 322, 262), name="input_1")  # timesteps x channels x imgsize
-    input = Input(shape=(timesteps, 1, 50, 146, 118), name="input_1")  # timesteps x channels x imgsize
+    input = Input(shape=shape, name="input_1")  # timesteps x channels x imgsize
     mpool = TimeDistributed(MaxPooling3D(pool_size=(downsample, downsample, downsample), data_format="channels_first", name="mpool3D"),
                             name="TD_mpool3D")(input)
     conv_1 = TimeDistributed(Conv3D(filters=6, kernel_size=(1, 5, 5), data_format="channels_first", name="conv_1"),
@@ -115,7 +115,6 @@ def tdist_gapnet(classification=False, timesteps=1, downsample=1, droprate=0.0, 
     relu_42 = TimeDistributed(Activation("relu", name="ReLU_42"), name="TD_ReLU_42")(merge_41)
     down_43 = TimeDistributed(AveragePooling3D(pool_size=relu_42._keras_shape[-3:], data_format="channels_first", name="down_43"),
                               name="TD_down_43")(relu_42)
-    # print("down_43:", down_43._keras_shape)
     flatten_44 = TimeDistributed(Flatten(name="flatten_44"), name="TD_flatten_44")(down_43) # batch_size x timesteps x features
     # print("flatten_44:", flatten_44._keras_shape)
 
@@ -128,11 +127,9 @@ def tdist_gapnet(classification=False, timesteps=1, downsample=1, droprate=0.0, 
             output = LSTM(classes, activation="softmax", return_sequences=False, name="lstm_49")(drop_48) # batch_size x classes
         else:
             output = LSTM(classes, activation="linear", return_sequences=False, name="lstm_49")(drop_48)  # batch_size x classes
-        # print(output._keras_shape)
     else:
         if classification:
             flatten_45 = Flatten(name="flatten_45")(flatten_44)  # flatten temporal dimension
-            # print("flatten_45:", flatten_45._keras_shape)
             dense_46 = Dense(units=32, activation="relu", kernel_regularizer=l2(reg), kernel_initializer=glorot_normal(2), name="dense_46")(flatten_45)
             drop_47 = Dropout(rate=droprate, seed=2, name="drop_47")(dense_46)
             dense_48 = Dense(units=16, activation="relu", kernel_regularizer=l2(reg), kernel_initializer=glorot_normal(2), name="dense_48")(drop_47)
@@ -140,12 +137,9 @@ def tdist_gapnet(classification=False, timesteps=1, downsample=1, droprate=0.0, 
             output = Dense(units=classes, activation="softmax", kernel_regularizer=l2(reg), kernel_initializer=glorot_normal(2), name="dense_50")(drop_49) # batch_size x classes
         else:
             reshape_45 = Reshape((flatten_44._keras_shape[-1], 1, 1, 1))(down_43)
-            # print("reshape:", reshape_45._keras_shape)
             conv_46 = Conv3D(filters=1, kernel_size=(1, 1, 1), data_format="channels_first", name="conv_46")(reshape_45)
-            # print("conv_46:", conv_46._keras_shape)
             output = Flatten(name="flatten_47")(conv_46)
-        # print("output:", output._keras_shape)
+    # print("output:", output._keras_shape)
 
-    # output_44 = TimeDistributed(Conv3D(filters=1, kernel_size=(1, 1, 1), data_format="channels_first", name="conv_44"), name="TD_conv_44")(down_43)
     model = Model(inputs=input, outputs=output)
     return model
