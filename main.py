@@ -30,26 +30,25 @@ droprate = float(sys.argv[8])
 reg = float(sys.argv[9])
 nsamples = int(sys.argv[10]) # up to 779 training samples
 cropped = eval(sys.argv[11])
-# debug = eval(sys.argv[11]) # 20 training, 5 val
 
 # name = 'test'
 # classification = False
-# timesteps = 1
-# batch_size = 1
+# timesteps = 5
+# batch_size = 3
 # learn_rate = 1e-3
 # max_epochs = 30
 # downsample = 1
 # droprate = 0
 # reg = 0
 # nsamples = 20 # up to 779 training samples
-# cropped = False
+# cropped = True
 
 params = {
     'classes': 6 if classification else 1,
     'timesteps': timesteps,
     'batch_size': batch_size,
     'channels': 1,
-    'dims': (50, 146, 118) if cropped else (142, 322, 262),
+    'cropped': cropped,
 }
 
 if learn_rate > 0:

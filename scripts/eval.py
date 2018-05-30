@@ -10,7 +10,7 @@ from keras.models import load_model
 from glob import glob
 
 
-name = "cnn_reg9"
+name = "cnn_reg6"
 classification = False
 timesteps = 1
 batch_size = 1
@@ -29,7 +29,7 @@ label_converter = {0: 0, 1: 0, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6} if classification e
 labels = {key: label_converter[val] for key, val in labels.items()}
 
 # model
-path = sorted(glob("../output/"+name+"/weights/*.hdf5"))[-2]
+path = sorted(glob("../output/"+name+"/weights/*.hdf5"))[-1]
 model = load_model(path)
 modelname = path.split("/")[-1].split(".hdf5")[0]
 print("Loaded model:", modelname)

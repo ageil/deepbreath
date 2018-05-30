@@ -1,10 +1,11 @@
 import numpy as np
 from keras.utils import Sequence, to_categorical
 from scipy.ndimage.interpolation import shift
+import os
 
 class DataGenerator(Sequence):
     def __init__(self, labels, partition, mode="train", oversample=False, flip=False, shift=False,
-                 classes=6, batch_size=5, timesteps=1, channels=1, dims=(142, 322, 262)):
+                 classes=6, batch_size=5, timesteps=1, channels=1, cropped=True):
         """Initialization"""
         self.mode = mode
         self.folder = "single_" + self.mode if timesteps == 1 else "time_" + self.mode
@@ -15,7 +16,7 @@ class DataGenerator(Sequence):
         self.batch_size = batch_size
         self.class_samples_per_batch = self.batch_size // 3  # 3 class buckets used for oversampling
         self.channels = channels
-        self.dims = dims
+        self.dims = (50, 146, 118) if cropped else (142, 322, 262)
         self.shuffle = True if mode == "train" else False
         self.oversample = oversample
         self.flip = flip
@@ -110,7 +111,7 @@ class DataGenerator(Sequence):
         y = np.empty((self.batch_size, 1), dtype=float)
 
         for i, ID in enumerate(batch_IDs):
-            prefix = '../data/full/' if self.dims == (142, 322, 262) else '../data/crop/'
+            prefix = './data/full/' if self.dims == (142, 322, 262) else './data/crop/'
             path = prefix + self.folder + "/vol_" + str(ID) + ".npy"
             img = np.load(path)
 
