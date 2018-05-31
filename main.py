@@ -2,8 +2,8 @@
 import numpy as np
 import pandas as pd
 import os
-import sys
 import pickle
+import argparse
 from sklearn.utils import class_weight
 from glob import glob
 
@@ -19,40 +19,44 @@ from scripts.TBCallbacks import TrainValTensorBoard
 
 
 # Set hyperparameters
-name = sys.argv[1]
-classification = eval(sys.argv[2])
-timesteps = int(sys.argv[3])
-batch_size = int(sys.argv[4])
-learn_rate = float(sys.argv[5])
-max_epochs = int(sys.argv[6])
-downsample = int(sys.argv[7])
-droprate = float(sys.argv[8])
-reg = float(sys.argv[9])
-nsamples = int(sys.argv[10]) # up to 779 training samples
-cropped = eval(sys.argv[11])
+parser = argparse.ArgumentParser()
+parser.add_argument("name", type=str, help="name of the model")
+parser.add_argument("timesteps", type=int, help="number of time steps")
+parser.add_argument("batch_size", type=int, help="number of samples in each batch, if oversampling batch_size >= 3")
+parser.add_argument("max_epochs", type=int, help="maximum number of epochs")
+parser.add_argument("--classification", default=False, action='store_true', help="train as classification or regression problem")
+parser.add_argument("--learn_rate", default=1e-3, type=float, help="learning rate")
+parser.add_argument("--nsamples", default=779, type=int, help="number of training samples used")
+parser.add_argument("--cropped", default=True, type=bool, help="cropped images or full size")
+parser.add_argument("--downsample", default=1, help="input downsampling factor")
+parser.add_argument("--droprate", default=0.0, help="proportion of units dropped in dropout layers")
+parser.add_argument("--reg", default=0.0, action='store_const', const=0.0, help="regularization parameter used for L2 regularization")
+parser.add_argument("--oversample", default=True, type=bool, help="oversample training data")
+parser.add_argument("--flip", default=True, type=bool, help="randomly flip training data")
+parser.add_argument("--shift", default=True, type=bool, help="randomly shift training data")
+parser.add_argument("--base", type=str, help="name of model containing pretrained weights")
+parser.add_argument("--base_version", default=1, type=int, help="version of saved weights to load, counting from last")
+parser.add_argument("--trainable", default=True, type=bool, help="make base weights trainable if using pretrained weights")
+parser.add_argument("--version", action='version', version="DeepBreath v0.9")
+args = parser.parse_args()
 
 # name = 'test'
-# classification = False
 # timesteps = 5
 # batch_size = 3
 # learn_rate = 1e-3
 # max_epochs = 30
-# downsample = 1
-# droprate = 0
-# reg = 0
 # nsamples = 20 # up to 779 training samples
-# cropped = True
 
 params = {
-    'classes': 6 if classification else 1,
-    'timesteps': timesteps,
-    'batch_size': batch_size,
+    'classes': 6 if args.classification else 1,
+    'timesteps': args.timesteps,
+    'batch_size': args.batch_size,
     'channels': 1,
-    'cropped': cropped,
+    'cropped': args.cropped,
 }
 
-if learn_rate > 0:
-    optimizer = Adam(lr=learn_rate)
+if args.learn_rate > 0:
+    optimizer = Adam(lr=args.learn_rate)
     opt = "Adam"
 else:
     optimizer = Nadam()
@@ -61,24 +65,20 @@ else:
 # Load data partitions
 with open("./data/partition.pkl", 'rb') as f:
     partition = pickle.load(f)
-partition["train"] = partition["train"][:nsamples]
+partition["train"] = partition["train"][:args.nsamples]
 
 # Load labels
 target = pd.read_csv("./data/ERU_Scores_Ids_5-Scans_Validity-0_VisuallyScored.csv")
 labels = target.set_index("StId").to_dict()["ERU.M2"]
 
 # Rescale labels
-if classification:
-    # combine 0+1 as 0 = no emph in scan, 1 = no emph in region
-    label_converter = {0: 0, 1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5}
+if args.classification:
     loss = "categorical_crossentropy"
     metrics = ['acc', 'mae', 'mse']
 else:
-    # Rescale to [0;1]; merge 0+1
-    # label_converter = {0: 0.0, 1: 0.0, 2: 0.03, 3: 0.155, 4: 0.38, 5: 0.63, 6: 0.88}
-    label_converter = {0: 0.0, 1: 0.0, 2: 1.0, 3: 2.0, 4: 3.0, 5: 4.0, 6: 5.0}
     loss = "mae"
     metrics = ['acc', 'mae', 'msle']
+label_converter = {0: 0.0, 1: 0.0, 2: 1.0, 3: 2.0, 4: 3.0, 5: 4.0, 6: 5.0} # combine 0 (no emph in scan) + 1 (no emph in region)
 labels = {key: label_converter[val] for key, val in labels.items()}
 
 
@@ -90,37 +90,54 @@ class_weights = class_weight.compute_class_weight(class_weight='balanced',
                                                   y=train_labels)
 
 # Create data generators
-trainGen = DataGenerator(labels, partition, mode="train", oversample=True, flip=True, shift=True, **params)
+trainGen = DataGenerator(labels, partition, mode="train", oversample=args.oversample, flip=args.flip, shift=args.shift, **params)
 validGen = DataGenerator(labels, partition, mode="valid", oversample=False, **params)
 
 # Create model
-paths = sorted(glob("./output/"+name+"/weights/*.hdf5"))
+paths = sorted(glob("./output/"+args.name+"/weights/*.hdf5"))
 if len(paths) > 0:
     path = paths[-1]
     model = load_model(path)
     print("Loaded model:", path)
 else:
-    model = tdist_gapnet(classification=classification, timesteps=timesteps, cropped=cropped, downsample=downsample, droprate=droprate, reg=reg)
+    model = tdist_gapnet(classification=args.classification, timesteps=args.timesteps, cropped=args.cropped,
+                         downsample=args.downsample, droprate=args.droprate, reg=args.reg)
     model.compile(optimizer=optimizer, loss=loss, metrics=metrics)
-    print("Created new model:", name)
+    print("Created new model:", args.name)
+
+print(os.getcwd())
+# Optionally load previous model with pretrained weights
+if args.base:
+    print("Loading pretrained weights...")
+    path = sorted(glob("./output/"+args.base+"/weights/*.hdf5"))[-args.base_version]
+
+    pretrained = load_model(path)
+    print(path)
+    print("Trainable weights:", args.trainable)
+
+    for i in range(45):
+        if pretrained.layers[i].name == model.layers[i].name:
+            weight = pretrained.layers[i].get_weights()
+            model.layers[i].set_weights(weight)
+            model.layers[i].trainable = args.trainable
 
 # Setup output folder
-directory = "./output/"+name+"/"
+directory = "./output/"+args.name+"/"
 if not os.path.exists(directory):
     os.makedirs(directory)
 
-    with open("./output/"+name+"/config.txt", "w") as txt:
-        txt.write("name = {0}\n".format(name))
+    with open("./output/"+args.name+"/config.txt", "w") as txt:
+        txt.write("name = {0}\n".format(args.name))
         txt.write("classification = {0}\n".format(classification))
-        txt.write("timesteps = {0}\n".format(timesteps))
-        txt.write("batch_size = {0}\n".format(batch_size))
-        txt.write("learn_rate = {0}\n".format(learn_rate))
-        txt.write("max_epochs= {0}\n".format(max_epochs))
-        txt.write("downsample = {0}\n".format(downsample))
-        txt.write("droprate = {0}\n".format(droprate))
-        txt.write("reg = {0}\n".format(reg))
-        txt.write("nsamples = {0}\n".format(nsamples))
-        txt.write("cropped = {0}\n".format(cropped))
+        txt.write("timesteps = {0}\n".format(args.timesteps))
+        txt.write("batch_size = {0}\n".format(args.batch_size))
+        txt.write("learn_rate = {0}\n".format(args.learn_rate))
+        txt.write("max_epochs= {0}\n".format(args.max_epochs))
+        txt.write("downsample = {0}\n".format(args.downsample))
+        txt.write("droprate = {0}\n".format(args.droprate))
+        txt.write("reg = {0}\n".format(args.reg))
+        txt.write("nsamples = {0}\n".format(args.nsamples))
+        txt.write("cropped = {0}\n".format(args.cropped))
         txt.write("loss = {0}\n".format(loss))
         txt.write("opt = {0}\n".format(opt))
 
@@ -144,15 +161,15 @@ callbacks.append(tensorboard) # add tensorboard logging
 hist = model.fit_generator(generator = trainGen,
                            validation_data = validGen,
                            class_weight = class_weights,
-                           epochs = max_epochs,
+                           epochs = args.max_epochs,
                            callbacks=callbacks,
                            use_multiprocessing=True,
                            workers=5)
 
 # Save final model
-finalsave = savepath + "epoch_{0:03d}".format(max_epochs) + "_final.hdf5"
+finalsave = savepath + "epoch_{0:03d}".format(args.max_epochs) + "-valloss_{val_loss:.2f}_{val_acc:.2f}" + "_final.hdf5"
 model.save(finalsave, include_optimizer=True, overwrite=True)
 
 # Dump history to disk
-with open("./output/"+name+"/history.pkl", 'wb') as f:
+with open("./output/"+args.name+"/history.pkl", 'wb') as f:
     pickle.dump(hist.history, f, pickle.HIGHEST_PROTOCOL)
