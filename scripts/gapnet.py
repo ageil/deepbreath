@@ -128,15 +128,15 @@ def tdist_gapnet(classification=False, timesteps=1, cropped=False, downsample=1,
         reshape_44 = Reshape((down_43._keras_shape[1:3]), name="reshape_45")(
             down_43)  # batch_size x timesteps x features
         lstm_45 = Bidirectional(LSTM(64, return_sequences=True, name="lstm_45"), name="bidir_lstm_45")(reshape_44)
-        drop_46 = Dropout(rate=droprate, seed=2, name="drop_46")(lstm_45)
-        lstm_47 = Bidirectional(LSTM(32, return_sequences=True, name="lstm_47"), name="bidir_lstm_47")(drop_46)
-        drop_48 = Dropout(rate=droprate, seed=2, name="drop_48")(lstm_47)
+        # drop_46 = Dropout(rate=droprate, seed=2, name="drop_46")(lstm_45)
+        lstm_47 = Bidirectional(LSTM(32, return_sequences=True, name="lstm_47"), name="bidir_lstm_47")(lstm_45)
+        # drop_48 = Dropout(rate=droprate, seed=2, name="drop_48")(lstm_47)
         if classification:
             output = LSTM(classes, activation="softmax", return_sequences=False, name="lstm_49")(
-                drop_48)  # batch_size x classes
+                lstm_47)  # batch_size x classes
         else:
             output = LSTM(classes, activation="linear", return_sequences=False, name="lstm_49")(
-                drop_48)  # batch_size x classes
+                lstm_47)  # batch_size x classes
     else:
         if classification:
             flatten_44 = TimeDistributed(Flatten(name="flatten_44"), name="TD_flatten_44")(
