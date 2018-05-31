@@ -102,23 +102,25 @@ if len(paths) > 0:
 else:
     model = tdist_gapnet(classification=args.classification, timesteps=args.timesteps, cropped=args.cropped,
                          downsample=args.downsample, droprate=args.droprate, reg=args.reg)
+
+    # Optionally load previous model with pretrained weights
+    if args.base:
+        print("Loading pretrained weights...")
+        path = sorted(glob("./output/" + args.base + "/weights/*.hdf5"))[-args.base_version]
+
+        pretrained = load_model(path)
+        print("Loaded base model:", path)
+        print("Trainable weights:", args.trainable)
+
+        for i in range(45):
+            if pretrained.layers[i].name == model.layers[i].name:
+                weight = pretrained.layers[i].get_weights()
+                model.layers[i].set_weights(weight)
+                model.layers[i].trainable = args.trainable
+
     model.compile(optimizer=optimizer, loss=loss, metrics=metrics)
     print("Created new model:", args.name)
 
-# Optionally load previous model with pretrained weights
-if args.base:
-    print("Loading pretrained weights...")
-    path = sorted(glob("./output/"+args.base+"/weights/*.hdf5"))[-args.base_version]
-
-    pretrained = load_model(path)
-    print(path)
-    print("Trainable weights:", args.trainable)
-
-    for i in range(45):
-        if pretrained.layers[i].name == model.layers[i].name:
-            weight = pretrained.layers[i].get_weights()
-            model.layers[i].set_weights(weight)
-            model.layers[i].trainable = args.trainable
 
 # Setup output folder
 directory = "./output/"+args.name+"/"
