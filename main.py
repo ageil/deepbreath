@@ -1,11 +1,11 @@
 # Basics
 import numpy as np
 import pandas as pd
-import os
-import pickle
 import argparse
-from sklearn.utils import class_weight
+import pickle
+import os
 from glob import glob
+from sklearn.utils import class_weight
 
 # Keras
 from keras.optimizers import Adam, Nadam
@@ -26,11 +26,12 @@ parser.add_argument("batch_size", type=int, help="number of samples in each batc
 parser.add_argument("max_epochs", type=int, help="maximum number of epochs")
 parser.add_argument("--classification", default=False, action='store_true', help="train as classification or regression problem")
 parser.add_argument("--learn_rate", default=1e-3, type=float, help="learning rate")
-parser.add_argument("--nsamples", default=779, type=int, help="number of training samples used")
+parser.add_argument("--train_samples", default=100, type=int, help="number of training samples used (debug=20, max=779)")
+parser.add_argument("--valid_samples", default=333, type=int, help="number of validation samples used (max=333)")
 parser.add_argument("--cropped", default=True, type=bool, help="cropped images or full size")
-parser.add_argument("--downsample", default=1, help="input downsampling factor")
-parser.add_argument("--droprate", default=0.0, help="proportion of units dropped in dropout layers")
-parser.add_argument("--reg", default=0.0, action='store_const', const=0.0, help="regularization parameter used for L2 regularization")
+parser.add_argument("--downsample", default=1, type=int, help="input downsampling factor")
+parser.add_argument("--droprate", default=0.0, type=float, help="proportion of units dropped in dropout layers")
+parser.add_argument("--reg", default=0.0, type=float, help="regularization parameter used for L2 regularization")
 parser.add_argument("--oversample", default=True, type=bool, help="oversample training data")
 parser.add_argument("--flip", default=True, type=bool, help="randomly flip training data")
 parser.add_argument("--shift", default=True, type=bool, help="randomly shift training data")
@@ -45,15 +46,6 @@ args = parser.parse_args()
 # batch_size = 3
 # learn_rate = 1e-3
 # max_epochs = 30
-# nsamples = 20 # up to 779 training samples
-
-params = {
-    'classes': 6 if args.classification else 1,
-    'timesteps': args.timesteps,
-    'batch_size': args.batch_size,
-    'channels': 1,
-    'cropped': args.cropped,
-}
 
 if args.learn_rate > 0:
     optimizer = Adam(lr=args.learn_rate)
@@ -65,7 +57,8 @@ else:
 # Load data partitions
 with open("./data/partition.pkl", 'rb') as f:
     partition = pickle.load(f)
-partition["train"] = partition["train"][:args.nsamples]
+partition["train"] = partition["train"][:args.train_samples]
+partition["valid"] = partition["valid"][:args.valid_samples]
 
 # Load labels
 target = pd.read_csv("./data/ERU_Scores_Ids_5-Scans_Validity-0_VisuallyScored.csv")
@@ -90,6 +83,13 @@ class_weights = class_weight.compute_class_weight(class_weight='balanced',
                                                   y=train_labels)
 
 # Create data generators
+params = {
+    'classes': 6 if args.classification else 1,
+    'timesteps': args.timesteps,
+    'batch_size': args.batch_size,
+    'channels': 1,
+    'cropped': args.cropped,
+}
 trainGen = DataGenerator(labels, partition, mode="train", oversample=args.oversample, flip=args.flip, shift=args.shift, **params)
 validGen = DataGenerator(labels, partition, mode="valid", oversample=False, **params)
 
@@ -105,7 +105,6 @@ else:
     model.compile(optimizer=optimizer, loss=loss, metrics=metrics)
     print("Created new model:", args.name)
 
-print(os.getcwd())
 # Optionally load previous model with pretrained weights
 if args.base:
     print("Loading pretrained weights...")
@@ -128,7 +127,7 @@ if not os.path.exists(directory):
 
     with open("./output/"+args.name+"/config.txt", "w") as txt:
         txt.write("name = {0}\n".format(args.name))
-        txt.write("classification = {0}\n".format(classification))
+        txt.write("classification = {0}\n".format(args.classification))
         txt.write("timesteps = {0}\n".format(args.timesteps))
         txt.write("batch_size = {0}\n".format(args.batch_size))
         txt.write("learn_rate = {0}\n".format(args.learn_rate))
@@ -136,10 +135,16 @@ if not os.path.exists(directory):
         txt.write("downsample = {0}\n".format(args.downsample))
         txt.write("droprate = {0}\n".format(args.droprate))
         txt.write("reg = {0}\n".format(args.reg))
-        txt.write("nsamples = {0}\n".format(args.nsamples))
+        txt.write("train_samples = {0}\n".format(args.train_samples))
+        txt.write("valid_samples = {0}\n".format(args.valid_samples))
+        txt.write("oversample = {0}\n".format(args.oversample))
         txt.write("cropped = {0}\n".format(args.cropped))
         txt.write("loss = {0}\n".format(loss))
         txt.write("opt = {0}\n".format(opt))
+        if args.base:
+            txt.write("base = {0}\n".format(args.base))
+            txt.write("base_version = {0}\n".format(args.base_version))
+            txt.write("trainable = {0}\n".format(args.trainable))
 
 # Set callbacks
 callbacks = []
@@ -155,7 +160,6 @@ callbacks.append(checkpoint)
 # custom tensorboard logging
 tensorboard= TrainValTensorBoard(log_dir=directory+"logs/", histogram_freq=0, write_graph=True, write_images=True) # custom TB writer object
 callbacks.append(tensorboard) # add tensorboard logging
-
 
 # Train model
 hist = model.fit_generator(generator = trainGen,
