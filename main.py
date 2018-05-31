@@ -37,7 +37,7 @@ parser.add_argument("--flip", default=True, type=bool, help="randomly flip train
 parser.add_argument("--shift", default=True, type=bool, help="randomly shift training data")
 parser.add_argument("--base", type=str, help="name of model containing pretrained weights")
 parser.add_argument("--base_version", default=1, type=int, help="version of saved weights to load, counting from last")
-parser.add_argument("--trainable", default=True, type=bool, help="make base weights trainable if using pretrained weights")
+parser.add_argument("--trainable", default=False, action='store_true', help="make base weights trainable if using pretrained weights")
 parser.add_argument("--version", action='version', version="DeepBreath v0.9")
 args = parser.parse_args()
 
