@@ -22,7 +22,7 @@ from scripts.TBCallbacks import TrainValTensorBoard
 parser = argparse.ArgumentParser()
 parser.add_argument("name", type=str, help="name of the model")
 parser.add_argument("timesteps", type=int, help="number of time steps")
-parser.add_argument("batch_size", type=int, help="number of samples in each batch, if oversampling batch_size >= 3")
+parser.add_argument("batch_size", type=int, help="number of samples in each batch, if oversampling use batch_size >= 3")
 parser.add_argument("max_epochs", type=int, help="maximum number of epochs")
 parser.add_argument("--classification", default=False, action='store_true', help="train as classification or regression problem")
 parser.add_argument("--learn_rate", default=1e-3, type=float, help="learning rate")

@@ -4,32 +4,45 @@ import pandas as pd
 import pickle
 import h5py
 import os
+import argparse
 
 from scripts.data_gen import DataGenerator
 from keras.models import load_model
 from glob import glob
 
 
-name = "cnn_reg6"
-classification = False
-timesteps = 1
-batch_size = 1
-mode = "valid" # partition to eval on
+parser = argparse.ArgumentParser()
+parser.add_argument("name", type=str, help="name of the model")
+parser.add_argument("timesteps", type=int, help="number of time steps")
+parser.add_argument("model_version", default=1, type=int, help="version of model counting from the back")
+parser.add_argument("--mode", default="valid", type=str, help="evaluate on train, valid or test data")
+parser.add_argument("--classification", default=False, action='store_true', help="train as classification or regression problem")
+parser.add_argument("--batch_size", default=1, type=int, help="number of samples in each batch, if oversampling use batch_size >= 3")
+parser.add_argument("--cropped", default=True, action='store_false', help="use cropped (default) or full size images")
+args = parser.parse_args()
+
+name = args.name
+timesteps = args.timesteps
+mode = args.mode
+classification = args.classification
+batch_size = args.batch_size
+cropped = args.cropped
+version = args.model_version
 
 
 # partitions
-with open("../data/partition.pkl", 'rb') as f:
+with open("./data/partition.pkl", 'rb') as f:
     partition = pickle.load(f)
 
 # labels
-target = pd.read_csv("../data/ERU_Scores_Ids_5-Scans_Validity-0_VisuallyScored.csv")
+target = pd.read_csv("./data/ERU_Scores_Ids_5-Scans_Validity-0_VisuallyScored.csv")
 labels = target.set_index("StId").to_dict()["ERU.M2"]
 
 label_converter = {0: 0, 1: 0, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6} if classification else {0: 0.0, 1: 0.0, 2: 1.0, 3: 2.0, 4: 3.0, 5: 4.0, 6: 5.0}
 labels = {key: label_converter[val] for key, val in labels.items()}
 
 # model
-path = sorted(glob("../output/"+name+"/weights/*.hdf5"))[-1]
+path = sorted(glob("./output/"+name+"/weights/*.hdf5"))[-version]
 model = load_model(path)
 modelname = path.split("/")[-1].split(".hdf5")[0]
 print("Loaded model:", modelname)
@@ -37,7 +50,7 @@ print("Loaded model:", modelname)
 # data generator
 dims = tuple([dim for dim in model.input_shape[3:]])
 gen = DataGenerator(labels, partition, mode=mode, oversample=False,
-                    classes=1, batch_size=batch_size, timesteps=timesteps, dims=dims)
+                    classes=1, batch_size=batch_size, timesteps=timesteps, cropped=cropped)
 
 # predict
 preds_int = np.empty((gen.__len__(), 2), dtype=int)
@@ -100,7 +113,7 @@ binary4_miss = np.sum(binary4["Actual"] != binary4["Predicted"])
 binary4_acc = binary4_hit / binary4.shape[0]
 
 # save
-directory = "../output/" + name + "/predictions/"
+directory = "./output/" + name + "/predictions/"
 if not os.path.exists(directory):
     os.makedirs(directory)
 
