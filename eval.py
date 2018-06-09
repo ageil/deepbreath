@@ -117,10 +117,10 @@ directory = "./output/" + name + "/predictions/"
 if not os.path.exists(directory):
     os.makedirs(directory)
 
-savepath = directory + "/" + modelname + ".csv"
+savepath = directory + "/" + modelname + "_" + mode + ".csv"
 df.to_csv(savepath, index=False)
 
-with open(directory + "/" + modelname + ".txt", "w") as txt:
+with open(directory + "/" + modelname + "_" + mode +".txt", "w") as txt:
     txt.write("{0}\n\n".format(modelname))
     txt.write("Overall\n")
     txt.write("hit  = {0}\n".format(round(hit, 2)))
