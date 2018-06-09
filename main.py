@@ -38,7 +38,7 @@ parser.add_argument("--shift", default=True, type=bool, help="randomly shift tra
 parser.add_argument("--base", type=str, help="name of model containing pretrained weights")
 parser.add_argument("--base_version", default=1, type=int, help="version of saved weights to load, counting from last")
 parser.add_argument("--trainable", default=False, action='store_true', help="make base weights trainable if using pretrained weights")
-parser.add_argument("--version", action='version', version="DeepBreath v0.9")
+parser.add_argument("--version", action='version', version="DeepBreath v1.0")
 args = parser.parse_args()
 
 # name = 'test'
@@ -173,7 +173,7 @@ hist = model.fit_generator(generator = trainGen,
                            workers=5)
 
 # Save final model
-finalsave = savepath + "epoch_{0:03d}".format(args.max_epochs) + "-valloss_{val_loss:.2f}_{val_acc:.2f}" + "_final.hdf5"
+finalsave = savepath + "epoch_{0:03d}".format(args.max_epochs) + "_final.hdf5"
 model.save(finalsave, include_optimizer=True, overwrite=True)
 
 # Dump history to disk
