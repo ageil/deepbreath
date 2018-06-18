@@ -41,11 +41,6 @@ parser.add_argument("--trainable", default=False, action='store_true', help="mak
 parser.add_argument("--version", action='version', version="DeepBreath v1.0")
 args = parser.parse_args()
 
-# name = 'test'
-# timesteps = 5
-# batch_size = 3
-# learn_rate = 1e-3
-# max_epochs = 30
 
 if args.learn_rate > 0:
     optimizer = Adam(lr=args.learn_rate)
