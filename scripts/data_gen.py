@@ -111,18 +111,21 @@ class DataGenerator(Sequence):
         y = np.empty((self.batch_size, 1), dtype=float)
 
         for i, ID in enumerate(batch_IDs):
-            prefix = './data/full/' if self.dims == (142, 322, 262) else './data/crop/'
-            path = prefix + self.folder + "/vol_" + str(ID) + ".npy"
-            img = np.load(path)
+            try:
+                prefix = './data/full/' if self.dims == (142, 322, 262) else './data/crop/'
+                path = prefix + self.folder + "/vol_" + str(ID) + ".npy"
+                img = np.load(path)
 
-            # preprocess image
-            if self.flip:
-                img = self.__random_flip(img)
-            if self.shift:
-                img = self.__random_shift(img)
+                # preprocess image
+                if self.flip:
+                    img = self.__random_flip(img)
+                if self.shift:
+                    img = self.__random_shift(img)
 
-            X[i, :, :, :, :, :] = img
-            y[i, 0] = self.labels[ID]
+                X[i, :, :, :, :, :] = img
+                y[i, 0] = self.labels[ID]
+            except:
+                print(path)
 
         if self.classes > 1:
             return X, to_categorical(y, num_classes=self.classes)

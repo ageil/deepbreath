@@ -82,38 +82,44 @@ binary_hit = np.sum(binary["Actual"] == binary["Predicted"])
 binary_miss = np.sum(binary["Actual"] != binary["Predicted"])
 binary_acc = binary_hit / binary.shape[0]
 
-binary0 = df[["Actual", "Predicted"]].replace([1,2,3,4], 1)
+binary0 = df[["Actual", "Predicted"]].replace([1, 2, 3, 4, 5], 1)
 binary0 = binary0.loc[binary0['Actual'] == 0]
 binary0_hit = np.sum(binary0["Actual"] == binary0["Predicted"])
 binary0_miss = np.sum(binary0["Actual"] != binary0["Predicted"])
 binary0_acc = binary0_hit / binary0.shape[0]
 
-binary1 = df[["Actual", "Predicted"]].replace([0, 2, 3, 4], 0)
+binary1 = df[["Actual", "Predicted"]].replace([0, 2, 3, 4, 5], 0)
 binary1 = binary1.loc[binary1['Actual'] == 1]
 binary1_hit = np.sum(binary1["Actual"] == binary1["Predicted"])
 binary1_miss = np.sum(binary1["Actual"] != binary1["Predicted"])
 binary1_acc = binary1_hit / binary1.shape[0]
 
-binary2 = df[["Actual", "Predicted"]].replace([0, 1, 3, 4], 0)
+binary2 = df[["Actual", "Predicted"]].replace([0, 1, 3, 4, 5], 0)
 binary2 = binary2.loc[binary2['Actual'] == 2]
 binary2_hit = np.sum(binary2["Actual"] == binary2["Predicted"])
 binary2_miss = np.sum(binary2["Actual"] != binary2["Predicted"])
 binary2_acc = binary2_hit / binary2.shape[0]
 
-binary3 = df[["Actual", "Predicted"]].replace([0, 1, 2, 4], 0)
+binary3 = df[["Actual", "Predicted"]].replace([0, 1, 2, 4, 5], 0)
 binary3 = binary3.loc[binary3['Actual'] == 3]
 binary3_hit = np.sum(binary3["Actual"] == binary3["Predicted"])
 binary3_miss = np.sum(binary3["Actual"] != binary3["Predicted"])
 binary3_acc = binary3_hit / binary3.shape[0]
 
-binary4 = df[["Actual", "Predicted"]].replace([0, 1, 2, 3], 0)
+binary4 = df[["Actual", "Predicted"]].replace([0, 1, 2, 3, 5], 0)
 binary4 = binary4.loc[binary4['Actual'] == 4]
 binary4_hit = np.sum(binary4["Actual"] == binary4["Predicted"])
 binary4_miss = np.sum(binary4["Actual"] != binary4["Predicted"])
 binary4_acc = binary4_hit / binary4.shape[0]
 
+binary5 = df[["Actual", "Predicted"]].replace([0, 1, 2, 3, 4], 0)
+binary5 = binary5.loc[binary5['Actual'] == 5]
+binary5_hit = np.sum(binary5["Actual"] == binary5["Predicted"])
+binary5_miss = np.sum(binary5["Actual"] != binary5["Predicted"])
+binary5_acc = binary5_hit / binary5.shape[0]
+
 # save
-directory = "./output/" + name + "/predictions/"
+directory = "./output/" + name + "/predictions/" + mode + "/"
 if not os.path.exists(directory):
     os.makedirs(directory)
 
@@ -121,7 +127,9 @@ savepath = directory + "/" + modelname + "_" + mode + ".csv"
 df.to_csv(savepath, index=False)
 
 with open(directory + "/" + modelname + "_" + mode +".txt", "w") as txt:
-    txt.write("{0}\n\n".format(modelname))
+    txt.write("{0}\n".format(modelname))
+    txt.write("{0}\n".format(name))
+    txt.write("{0}\n\n".format(mode))
     txt.write("Overall\n")
     txt.write("hit  = {0}\n".format(round(hit, 2)))
     txt.write("miss = {0}\n".format(round(miss,2)))
@@ -150,6 +158,10 @@ with open(directory + "/" + modelname + "_" + mode +".txt", "w") as txt:
     txt.write("hit  = {0}\n".format(round(binary4_hit,2)))
     txt.write("miss = {0}\n".format(round(binary4_miss,2)))
     txt.write("acc  = {0}\n\n".format(round(binary4_acc,2)))
+    txt.write("5 only\n")
+    txt.write("hit  = {0}\n".format(round(binary5_hit, 2)))
+    txt.write("miss = {0}\n".format(round(binary5_miss, 2)))
+    txt.write("acc  = {0}".format(round(binary5_acc, 2)))
 
 # print summary
 print(name)
